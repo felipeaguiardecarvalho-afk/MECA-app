@@ -1,0 +1,74 @@
+/**
+ * CRITICAL FILE — DO NOT MODIFY STRUCTURE
+ * Breaking this file will destroy the UI
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: #111827;
+  --background: #ffffff;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+/* Design system — premium SaaS (Stripe / Linear / Notion) */
+@layer components {
+  .ds-page {
+    @apply mx-auto max-w-4xl px-6 py-20;
+  }
+
+  .ds-page-narrow {
+    @apply mx-auto max-w-3xl px-6 py-20;
+  }
+
+  .ds-landing-section {
+    @apply mx-auto max-w-3xl space-y-16 px-6 py-20;
+  }
+
+  .ds-heading-xl {
+    @apply text-4xl font-semibold tracking-tight text-gray-900 md:text-5xl;
+  }
+
+  .ds-heading {
+    @apply text-2xl font-semibold text-gray-900;
+  }
+
+  .ds-body {
+    @apply text-base text-gray-600;
+  }
+
+  .ds-small {
+    @apply text-sm text-gray-500;
+  }
+
+  .ds-btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-900;
+  }
+
+  .ds-btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:border-gray-400 hover:bg-gray-50;
+  }
+
+  .ds-card {
+    @apply rounded-2xl bg-white p-6 shadow-sm;
+  }
+
+  .ds-input {
+    @apply mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:border-gray-900 focus:ring-1 focus:ring-gray-900;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

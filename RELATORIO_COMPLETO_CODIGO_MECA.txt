@@ -1,0 +1,388 @@
+MECA App - Relatorio tecnico completo e detalhado do codigo
+
+1. Visao geral do projeto
+O projeto e uma aplicacao web em Next.js 15 com App Router, React 19 e TypeScript. O produto gira em torno de um diagnostico MECA, autenticacao por e-mail, controle de acesso por grant e exibicao de resultados no dashboard. O backend principal de autenticacao e persistencia e o Supabase.
+
+O fluxo central do produto e:
+1) usuario entra pela landing
+2) autentica com e-mail
+3) recebe permissao de acesso por grant ou por bootstrap de e-mail
+4) realiza o diagnostico
+5) o resultado e salvo em responses
+6) o diagnostico e bloqueado para repeticao automatica
+7) o usuario passa a consumir o dashboard como area principal
+
+2. Stack e dependencias
+Arquivo base: package.json
+- Framework: next ^15.1.0
+- UI: react ^19.0.0, react-dom ^19.0.0
+- Backend as a service: @supabase/supabase-js, @supabase/ssr
+- Graficos: recharts
+- Exportacao PDF: jspdf
+- Validacao: zod
+- Testes: vitest, playwright, axe-core/playwright
+- Estilo: tailwindcss + postcss + autoprefixer
+
+Scripts relevantes:
+- npm run dev: sobe o app localmente
+- npm run build: build de producao
+- npm run lint: lint do projeto
+- npm run test: testes unitarios com Vitest
+- npm run test:e2e: testes Playwright
+- npm run verify: lint + unit + e2e
+
+3. Estrutura funcional do codigo
+A app esta organizada em tres eixos principais:
+- app/: paginas e route handlers do Next.js
+- lib/: regras de negocio, auth, benchmark, supabase, funcoes de dominio
+- components/: componentes visuais e interativos
+
+Principais rotas de pagina:
+- / -> src/app/page.tsx
+- /login -> src/app/login/page.tsx + LoginForm.tsx
+- /assessment -> src/app/assessment/page.tsx + AssessmentClient.tsx
+- /dashboard -> src/app/dashboard/page.tsx + DashboardClient.tsx
+- /access-code -> src/app/access-code/page.tsx + AccessForm.tsx
+- /plano-de-acao -> pagina de plano complementar
+- /diagnostico -> rota publica relacionada a apresentacao/entrada
+
+Principais APIs:
+- /api/auth/magic-link
+- /api/auth/master-magic-link
+- /api/auth/bootstrap-email-grant
+- /api/access-code
+- /api/score
+- /api/user/history
+- /api/user/access-state
+- /api/benchmark
+- /api/admin/diagnostic-overview
+- /api/admin/unlock-diagnostic
+
+4. Middleware e controle de rotas
+Arquivo: src/middleware.ts
+O middleware concentra a politica de navegacao autenticada.
+
+Comportamentos principais:
+- rotas publicas: /, /login, /diagnostico, assets e /auth/callback
+- rotas protegidas por sessao: /assessment, /dashboard, /plano-de-acao, /access-code
+- se o usuario nao tiver sessao e entrar numa rota protegida, vai para /login?next=...
+- para /assessment, /dashboard e /plano-de-acao, alem da sessao a app verifica grant em access_grants
+- se nao houver grant, redireciona para /access-code
+- se o usuario ja tiver grant mas can_take_diagnostic=false e tentar abrir /assessment, vai para /dashboard
+- em /access-code, se houver sessao, o middleware tenta bootstrap de grant por e-mail e, se conseguir, tira o usuario dessa tela automaticamente
+
+Tambem ha redirects legados:
+- /access -> /access-code
+- /results -> /dashboard
+- /reports -> /dashboard
+
+5. Autenticacao e login por e-mail
+Arquivo principal de UI: src/app/login/LoginForm.tsx
+Arquivo principal do handler: src/lib/auth/service-magic-link.ts
+
+O login segue dois caminhos:
+
+5.1 Caminho preferencial com service role
+- o frontend envia email e next para POST /api/auth/magic-link
+- o handler decide se usa o caminho admin generateLink
+- se usar, o Supabase Admin API gera um magic link com hashed_token
+- o frontend chama supabase.auth.verifyOtp com token_hash
+- a sessao e criada diretamente no browser
+- o usuario e redirecionado para next, por padrao /assessment
+
+5.2 Fallback para OTP publico
+- se o handler responder bypass=false, o frontend faz supabase.auth.signInWithOtp
+- o Supabase envia o e-mail com o link magico
+- o usuario completa o fluxo via /auth/callback
+
+5.3 Rota de callback
+Arquivo: src/app/auth/callback/route.ts
+- recebe o code do Supabase
+- valida se as envs NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY existem
+- faz exchangeCodeForSession
+- grava cookies de sessao no NextResponse do redirect
+- redireciona para next sanitizado
+- em caso de erro, volta para /login com codigos de erro amigaveis na query string
+
+6. Politica atual para rate limit de e-mail
+Arquivo: src/lib/auth/service-magic-link.ts
+Hoje a aplicacao foi configurada para, na pratica, evitar o rate limit do OTP publico quando existe SUPABASE_SERVICE_ROLE_KEY.
+
+Logica atual:
+- se DISABLE_MAGIC_LINK_SERVICE_FOR_ALL=1, o bypass para todos fica desligado
+- se houver SUPABASE_SERVICE_ROLE_KEY e o bypass nao estiver desligado, o sistema pode usar Admin generateLink para qualquer e-mail
+- o e-mail master tambem pode usar esse caminho, salvo se DISABLE_MASTER_MAGIC_LINK=1
+
+Implicacao tecnica:
+- reduz o erro "email rate limit exceeded"
+- mas tambem diminui a garantia de prova de posse do e-mail, porque o usuario pode obter sessao sem abrir a caixa de entrada
+
+Esse e um ponto importante para discussao de arquitetura e seguranca.
+
+7. Master/admin
+Arquivos:
+- src/lib/auth/canonical-master.ts
+- src/lib/auth/master-login.ts
+- src/lib/auth/isAdmin.ts
+
+A regra atual do projeto e restritiva:
+- ha um master unico, baseado em e-mail canonico
+- isAdmin(email) delega para isMasterAccountEmail(email)
+- nao ha uma lista ampla de admins no fluxo atual
+
+Impacto:
+- APIs admin e telas admin dependem exclusivamente da sessao do master
+- isso simplifica governanca, mas cria dependencia operacional em uma unica conta privilegiada
+
+8. Grants de acesso
+Arquivos:
+- src/lib/auth/ensure-email-access.ts
+- src/app/api/access-code/route.ts
+- src/app/access-code/AccessForm.tsx
+- src/app/api/auth/bootstrap-email-grant/route.ts
+- src/app/api/user/access-state/route.ts
+
+O modelo de acesso combina login por e-mail com grants no banco.
+
+8.1 Bootstrap por e-mail
+- se o usuario tem sessao mas nao tem grant, a app tenta criar grant com RPC ensure_email_access_grant
+- isso permite que usuarios autenticados por e-mail usem a app sem precisar de codigo manual
+- a operacao e idempotente
+
+8.2 Codigo da organizacao
+- se o bootstrap por e-mail nao resolver, o usuario pode informar codigo na tela /access-code
+- a API /api/access-code valida o codigo via RPC validate_access_code
+- a resposta diferencia cenarios como invalido, expirado, limite excedido, ja usado e nao autenticado
+
+8.3 Papel atual da pagina /access-code
+A pagina virou uma tela de contingencia. A UX orienta que quem entra so com e-mail deveria receber acesso automatico e usa o codigo apenas quando a empresa fornece explicitamente um codigo organizacional.
+
+9. Fluxo do diagnostico
+Arquivos:
+- src/app/assessment/AssessmentClient.tsx
+- src/app/api/score/route.ts
+- src/lib/diagnostic-engine.ts
+- src/lib/types.ts
+
+9.1 Interface do questionario
+- 60 perguntas fixas
+- 4 pilares base: mentalidade, engajamento, cultura, performance
+- respostas de 1 a 5
+- cada pergunta tem timer de 15 segundos
+- ao expirar o tempo, a resposta neutra 3 pode ser aplicada automaticamente
+- no fim, o cliente envia o conjunto de respostas para /api/score
+
+9.2 Motor de diagnostico
+Arquivo: src/lib/diagnostic-engine.ts
+- contem a base de perguntas e a logica de score
+- converte Likert 1..5 para faixa 0..100
+- calcula os pilares e dimensoes derivadas, incluindo direction e capacity
+- produz tambem archetype
+
+9.3 Persistencia do diagnostico
+Arquivo: src/app/api/score/route.ts
+- valida o body com zod
+- calcula o diagnostico no servidor, nunca no cliente como fonte de verdade
+- obtem user da sessao ou usa fallback dev quando auth esta desligado
+- checa access_grants antes de aceitar submissao autenticada
+- grava linha em responses com campos legados e novos
+
+Campos relevantes gravados:
+- user_id
+- answers
+- score_m, score_e, score_c, score_a
+- completed_at
+- mentalidade, engajamento, cultura, performance
+- direction, capacity, archetype
+- is_admin
+
+Apos gravar:
+- se o fluxo for autenticado normal, a API seta can_take_diagnostic=false em access_grants
+- isso bloqueia novo diagnostico automatico
+
+10. Dashboard
+Arquivos:
+- src/app/dashboard/page.tsx
+- src/app/dashboard/DashboardClient.tsx
+- src/components/Dashboard/index.tsx
+- src/components/charts/RadarChart.tsx
+- src/components/charts/TrendLineChart.tsx
+- src/components/PdfExportButton.tsx
+
+O dashboard atual tem duas camadas coexistindo:
+- DashboardClient.tsx: tela rica atual, com historico, comparacao, benchmark, logout e modo admin
+- components/Dashboard/index.tsx: componente legado/alternativo que ainda existe no codigo e tambem consome /api/user/history
+
+10.1 Comportamento do DashboardClient atual
+- carrega historico via /api/user/history
+- define viewerRole como admin ou user
+- carrega benchmark via /api/benchmark
+- escolhe automaticamente um diagnostico selecionado com base em saved, highlight ou ultimo item
+- permite comparar o diagnostico atual com outro do mesmo usuario
+- monta pontos para grafico de tendencia
+- oferece logout via supabase.auth.signOut()
+- mostra mensagem quando um diagnostico acabou de ser salvo
+
+10.2 Diferenca de visao por perfil
+Usuario comum:
+- ve somente seus proprios registros
+- pode escolher qualquer diagnostico seu
+- pode comparar com qualquer outro diagnostico seu
+
+Admin/master:
+- pode ver todos os registros do banco, se houver service role
+- o dashboard filtra a tendencia e comparacao pelo usuario do diagnostico selecionado
+- recebe benchmark com insights globais agregados
+
+10.3 Estado vazio
+- para usuario comum sem historico: CTA para iniciar diagnostico
+- para admin sem registros: mensagem de modo admin com CTA de teste
+
+11. APIs de historico e benchmark
+
+11.1 /api/user/history
+Arquivo: src/app/api/user/history/route.ts
+- usuario normal: select em responses filtrando user_id da sessao
+- admin: usa service role para buscar todos os registros
+- auth off: pode usar um DEV_ANONYMOUS_USER_ID para simular historico
+- resposta inclui viewer.role
+
+11.2 /api/benchmark
+Arquivo: src/app/api/benchmark/route.ts
+- usuario normal recebe apenas scores de referencia agregados
+- admin recebe tambem globalInsights calculados sobre o conjunto de responses
+- sem service role para admin, a API responde 503
+
+12. Ferramentas administrativas
+
+12.1 Painel admin no dashboard
+Arquivo: src/components/admin/AdminDiagnosticPanel.tsx
+- aparece apenas se a API /api/admin/diagnostic-overview liberar
+- lista e-mail, quantidade de respostas, possibilidade de refazer, codigo e acao
+- tem botao para liberar novo diagnostico para um user_id
+
+12.2 /api/admin/diagnostic-overview
+- exige sessao admin/master
+- exige SUPABASE_SERVICE_ROLE_KEY
+- le access_grants
+- le responses para contar por usuario
+- pagina auth.admin.listUsers do Supabase para associar email ao user_id
+- devolve um consolidado operacional para o painel
+
+12.3 /api/admin/unlock-diagnostic
+- exige sessao admin/master
+- exige service role
+- recebe user_id valido
+- seta can_take_diagnostic=true em access_grants
+- nao cria grant novo; so altera grant existente
+
+13. Modos especiais e feature flags
+Arquivo: src/lib/auth-mode.ts e partes do projeto
+
+Flags importantes:
+- NEXT_PUBLIC_DISABLE_AUTH / DISABLE_AUTH
+  Desliga login, codigo e gates no middleware para desenvolvimento.
+
+- SUPABASE_SERVICE_ROLE_KEY
+  Habilita operacoes administrativas e bypass de magic link.
+
+- DEV_ANONYMOUS_USER_ID
+  Permite gravar diagnosticos no banco mesmo com auth desligado.
+
+- DISABLE_MAGIC_LINK_SERVICE_FOR_ALL
+  Desliga bypass de magic link para todos os e-mails.
+
+- DISABLE_MASTER_MAGIC_LINK
+  Desliga bypass de magic link para o master.
+
+- E2E_INSTANT_DIAGNOSTIC
+  Faz submissao automatica com respostas neutras nos testes E2E.
+
+14. Integracao com Supabase
+Arquivos:
+- src/lib/supabase/client.ts
+- src/lib/supabase/server.ts
+- src/lib/supabase/admin.ts
+- src/lib/supabase/middleware.ts
+- src/types/database.ts
+
+Camadas de cliente:
+- client.ts: cliente browser
+- server.ts: cliente server-side com sessao do usuario
+- admin.ts: cliente com service role para operacoes privilegiadas
+- middleware.ts: atualizacao/sincronizacao da sessao durante requests
+
+Dependencias de banco/RPC observadas no codigo:
+- tabela responses
+- tabela access_grants
+- RPC ensure_email_access_grant
+- RPC validate_access_code
+
+O projeto depende de compatibilidade entre schema e payloads. Exemplo claro: /api/score grava score_m/score_e/score_c/score_a para compatibilizar schema legado com colunas NOT NULL.
+
+15. Qualidade, testes e verificacao
+Arquivos relevantes:
+- src/__tests__/access-control.test.ts
+- src/__tests__/action-plan.test.ts
+- src/__tests__/diagnostic-engine.test.ts
+- src/__tests__/evolution.test.ts
+- src/__tests__/styling-system.test.ts
+- e2e/uat.spec.ts
+- playwright.config.ts
+
+Cobertura observada:
+- motor de diagnostico
+- regras de evolucao e action plan
+- controle de acesso/admin
+- smoke e2e de rotas criticas
+- validacao basica da API de magic-link no E2E
+
+Ponto positivo:
+- existe cultura de testes para dominio e smoke flows
+
+Ponto de atencao:
+- varias integracoes importantes com Supabase dependem mais de comportamento real do ambiente do que de mocks ou testes de contrato profundos
+
+16. Forcas do codigo atual
+- middleware claro para separar paginas publicas e protegidas
+- autenticacao e persistencia concentradas no servidor
+- regra de negocio de bloqueio de novo diagnostico aplicada no backend
+- dashboard ja contempla historico, comparacao e comportamento admin
+- tratamento de fallback para dev/auth off e offline e razoavelmente bem pensado
+- uso de zod nas APIs reduz risco de payload invalido
+
+17. Debitos tecnicos e riscos de arquitetura
+
+17.1 Bypass de magic link para todos os e-mails
+E o risco mais importante do estado atual. Resolve o problema de rate limit, mas altera o modelo de confianca da autenticacao. Em ambiente publico, isso precisa decisao explicita.
+
+17.2 Sobreposicao de implementacoes de dashboard
+Ha um DashboardClient atual e um componente legado em src/components/Dashboard/index.tsx. Isso pode gerar confusao de manutencao, duplicacao de conceitos e risco de divergencia futura.
+
+17.3 Forte dependencia de service role
+Historico admin, benchmark global, unlock e bypass de login dependem da service role. Operacionalmente, isso precisa estar bem controlado por ambiente, segredo e observabilidade.
+
+17.4 Dependencia de RPCs e schema remoto
+Boa parte da logica real de grant e access code esta no Supabase. Se as migrations ou RPCs do ambiente nao estiverem alinhadas com o codigo, surgem falhas de UX e autorizacao.
+
+17.5 Papel admin centralizado em um unico e-mail
+Isso simplifica governanca, mas cria fragilidade operacional e dependencia de uma conta unica.
+
+18. O que eu diria para o engenheiro de aplicacoes
+- A aplicacao esta funcional e relativamente bem segmentada entre UI, middleware, APIs e dominio.
+- O ponto mais sensivel nao e renderizacao, e sim a politica de autenticacao adotada para evitar rate limit.
+- O modelo de acesso hoje mistura login por e-mail, grant por banco e fallback por codigo organizacional.
+- O backend confia corretamente na sessao do Supabase para user_id e privilegios.
+- O diagnostico e authoritative no servidor e bloqueia repeticao no banco, o que e bom para consistencia.
+- O dashboard ja esta pronto para evolucao de produto, porque suporta historico, comparacao e vista admin.
+
+19. Recomendacoes tecnicas objetivas
+- Decidir explicitamente a politica de autenticacao em producao: OTP real, SMTP proprio, ou bypass controlado em ambiente fechado.
+- Consolidar a implementacao de dashboard, removendo ou descontinuando a camada antiga se nao for mais usada.
+- Formalizar migrations e contrato de banco como parte obrigatoria do deploy.
+- Adicionar observabilidade nas rotas criticas: /api/auth/magic-link, /auth/callback, /api/score, /api/user/history.
+- Rever se o modelo de admin unico permanece suficiente conforme a operacao crescer.
+- Avaliar testes adicionais de integracao para access_grants, bootstrap-email-grant e callback auth.
+
+20. Conclusao
+O codigo mostra uma base solida de produto com regras de negocio reais ja embutidas. A principal caracteristica arquitetural nao e apenas Next.js + Supabase, mas sim a forma como o sistema combina autenticacao por e-mail, grants de acesso, diagnostico com persistencia authoritative no servidor e um dashboard orientado a historico. O sistema esta funcional e coerente, mas a decisao sobre o bypass de autenticacao para evitar rate limit e o tema mais importante para alinhamento entre engenharia de aplicacoes, produto e seguranca.

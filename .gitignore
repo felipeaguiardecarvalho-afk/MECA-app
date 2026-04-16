@@ -1,0 +1,18 @@
+.next/
+node_modules/
+.env
+.env.local
+.env.*.local
+.env.production
+.env.production.local
+npm-debug.log*
+.DS_Store
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Backups (keep local, avoid bloating git)
+/backups/
+*.zip

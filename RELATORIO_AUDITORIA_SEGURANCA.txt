@@ -1,0 +1,89 @@
+================================================================================
+RELATÓRIO — AUDITORIA DE SEGURANÇA (MECA APP)
+================================================================================
+
+Projeto: MECA — diagnóstico comportamental (Next.js + Supabase)
+Âmbito: superfície de ataque, segredos, dados e controlos de acesso.
+Nota: não substitui penetration test nem auditoria formal de infraestrutura.
+Data de referência: abril de 2026 — estado atual do repositório.
+
+--------------------------------------------------------------------------------
+1. AUTENTICAÇÃO E AUTORIZAÇÃO (ATUALIZADO)
+--------------------------------------------------------------------------------
+
+PÁGINA DE LOGIN — /login (LoginForm.tsx): entrada por e-mail sem senha persistente;
+OTP / magic link via Supabase (signInWithOtp). Destino após sessão: ?next= (ex. /access-code).
+
+CALLBACK — /auth/callback: cookies de sessão; alinhar Redirect URLs no projeto Supabase.
+
+MIDDLEWARE — Sem sessão em rotas protegidas → /login?next=... Com sessão: access_grants
+para dashboard/assessment/plano-de-acao; /assessment exige can_take_diagnostic.
+
+CÓDIGO DE ACESSO — /access-code; POST /api/access-code + RPC validate_access_code.
+
+ADMIN — MASTER_ADMIN_EMAIL + SUPABASE_SERVICE_ROLE_KEY nas APIs admin; nunca confiar no
+email vindo do body do cliente.
+
+MODO SEM LOGIN — NEXT_PUBLIC_DISABLE_AUTH desativa gates (só dev).
+
+Superfície explícita: o utilizador usa a rota /login no fluxo normal com auth ativa.
+
+--------------------------------------------------------------------------------
+2. SEGREDOS E CHAVES
+--------------------------------------------------------------------------------
+
+NEXT_PUBLIC_* Supabase — públicas; RLS obrigatório.
+SUPABASE_SERVICE_ROLE_KEY — só servidor.
+MASTER_ADMIN_EMAIL — só servidor.
+.env.local fora do Git.
+
+--------------------------------------------------------------------------------
+3. DADOS E STORAGE
+--------------------------------------------------------------------------------
+
+responses com RLS; sessionStorage (scores) — risco XSS; CSP e sanitização.
+
+--------------------------------------------------------------------------------
+4. ESTILOS NO CLIENTE
+--------------------------------------------------------------------------------
+
+StyleGuard / TailwindFallbackBoundary — fiabilidade UI, não segurança perimetral.
+
+--------------------------------------------------------------------------------
+5. REDE
+--------------------------------------------------------------------------------
+
+HTTPS em produção para cookies e links de magic login.
+
+--------------------------------------------------------------------------------
+6. SUPABASE
+--------------------------------------------------------------------------------
+
+Redirect URLs incluindo /auth/callback e origem da app. Rever RLS nas tabelas.
+
+--------------------------------------------------------------------------------
+7. BUILD
+--------------------------------------------------------------------------------
+
+Cache .next corrompido — disponibilidade; npm run clean com servidor parado.
+
+--------------------------------------------------------------------------------
+8. CHECKLIST PRODUÇÃO
+--------------------------------------------------------------------------------
+
+[ ] Auth desligada inativa em produção
+[ ] Service role só no servidor
+[ ] Redirect URLs Auth corretos (/login OTP)
+[ ] Rotas sensíveis com sessão + grant
+[ ] /login documentada e testada no fluxo
+
+--------------------------------------------------------------------------------
+9. RESUMO
+--------------------------------------------------------------------------------
+
+Login OTP em /login; gates e diagnóstico único no servidor. Service role crítico.
+XSS aumenta impacto de sessionStorage.
+
+================================================================================
+Fim do relatório
+================================================================================

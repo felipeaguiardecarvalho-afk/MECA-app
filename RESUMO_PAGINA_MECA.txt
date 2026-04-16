@@ -1,0 +1,75 @@
+MECA App - Resumo tecnico da pagina/aplicacao
+
+1) Stack e arquitetura
+- Frontend: Next.js (App Router) + React + TypeScript.
+- Auth e dados: Supabase (Auth + tabelas como responses e access_grants).
+- Navegacao principal:
+  - / = landing page
+  - /login = autenticacao por e-mail
+  - /assessment = questionario/diagnostico
+  - /dashboard = resultado, historico e comparacao
+  - /access-code = ponte de grant/acesso
+
+2) Regras de acesso
+- Rotas publicas: /, /login, /diagnostico e callback de autenticacao.
+- Rotas protegidas por sessao: /assessment, /dashboard, /plano-de-acao, /access-code.
+- Se o usuario nao estiver autenticado e tentar acessar rota protegida, vai para /login?next=...
+- O middleware verifica se existe access_grant para permitir o fluxo correto.
+- Se o usuario ja concluiu o diagnostico e nao pode refaze-lo, /assessment redireciona para /dashboard.
+
+3) Fluxo de login
+- O usuario informa o e-mail em /login.
+- O frontend chama POST /api/auth/magic-link.
+- Quando existe service role:
+  - a API usa auth.admin.generateLink
+  - o frontend faz verifyOtp com o token retornado
+  - a sessao e criada no browser sem depender do OTP publico
+- Quando esse caminho nao esta disponivel:
+  - o frontend usa supabase.auth.signInWithOtp
+  - o usuario recebe o magic link por e-mail
+
+4) Como o app evita "email rate limit exceeded"
+- O limite ocorre no fluxo publico signInWithOtp do Supabase Auth.
+- O app pode contornar isso usando generateLink no servidor com service role.
+- Assim, acessos repetidos ao dashboard/login nao dependem do envio publico de e-mail.
+
+5) Fluxo do diagnostico
+- O usuario responde perguntas em escala de 1 a 5.
+- Existe timer por pergunta.
+- Se o tempo acabar, a resposta neutra pode ser aplicada automaticamente.
+- No final, o frontend envia as respostas para POST /api/score.
+- A API calcula/persiste o diagnostico e devolve o id do resultado.
+- O frontend redireciona para /dashboard?saved=<id>.
+
+6) Fluxo do dashboard
+- Carrega historico via /api/user/history.
+- Usuario comum: ve somente os proprios diagnosticos.
+- Master/admin: pode ver dados mais amplos e insights globais.
+- O usuario pode:
+  - escolher qual diagnostico visualizar
+  - comparar com outro diagnostico do proprio historico
+  - exportar PDF
+  - sair da sessao
+
+7) Regras de negocio atuais
+- Login por e-mail.
+- Depois de concluir o diagnostico, o acesso principal passa a ser o dashboard.
+- O refazer diagnostico nao e livre para todos; depende das regras em access_grants.
+- Existe um master unico definido pela regra de negocio atual.
+
+8) Dados envolvidos
+- responses: guarda os diagnosticos concluidos e scores.
+- access_grants: controla permissao de acesso e possibilidade de refazer diagnostico.
+
+9) Pontos para discutir com o engenheiro de aplicacoes
+- Se o bypass por service role para todos os e-mails deve ficar ativo em producao.
+- Qual politica de seguranca sera adotada para autenticacao sem depender de e-mail.
+- Como sera feita a observabilidade de login, callback, score e dashboard.
+- Se o modelo de grants atual esta adequado para a operacao do produto.
+
+10) Estado atual
+- Login funcional.
+- Dashboard funcional.
+- Historico de diagnosticos visivel.
+- Comparacao entre diagnosticos implementada.
+- Controle de acesso por sessao e grant implementado.

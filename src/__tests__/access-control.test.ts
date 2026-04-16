@@ -1,0 +1,16 @@
+import { describe, expect, it } from "vitest";
+
+describe("isAdmin", () => {
+  it("does not treat arbitrary emails as admin", async () => {
+    const { isAdmin } = await import("@/lib/auth/isAdmin");
+    expect(isAdmin("admin@example.com")).toBe(false);
+    expect(isAdmin("  admin@example.com  ")).toBe(false);
+    expect(isAdmin("other@example.com")).toBe(false);
+  });
+
+  it("always treats canonical master email as admin", async () => {
+    const { isAdmin } = await import("@/lib/auth/isAdmin");
+    expect(isAdmin("felipe.aguiardecarvalho@gmail.com")).toBe(true);
+    expect(isAdmin("Felipe.Aguiardecarvalho@gmail.com")).toBe(true);
+  });
+});

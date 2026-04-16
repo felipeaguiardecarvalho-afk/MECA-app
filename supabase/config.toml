@@ -1,0 +1,17 @@
+# Supabase CLI — https://supabase.com/docs/guides/cli
+# 1) supabase login
+# 2) supabase link --project-ref <YOUR_PROJECT_REF>
+# 3) npm run db:push   (applies migrations to linked remote)
+# Local: supabase start && npm run db:reset (migrations + seed)
+
+project_id = "meca-app"
+
+[api]
+enabled = true
+
+[db]
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]

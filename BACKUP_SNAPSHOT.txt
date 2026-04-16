@@ -1,0 +1,22 @@
+BACKUP / SNAPSHOT - MECA app
+
+Data/hora (local): 2026-04-16
+
+O que foi feito
+- Criado um repositório Git dentro de: C:\Users\felip\Documents\MECA app
+- Gerado backup físico (zip) em: C:\Users\felip\Documents\MECA app\backups\meca-snapshot-20260416-080616.zip
+- Este arquivo serve como registro do snapshot para recuperação.
+
+Como recuperar (opções)
+1) Recuperar pelo Git
+   - Abra a pasta do projeto.
+   - Verifique o histórico (git log) e faça checkout do commit desejado.
+
+2) Recuperar pelo ZIP
+   - Extraia o arquivo zip em uma pasta vazia.
+   - Rode: npm install
+   - Rode: npm run dev
+
+Observações
+- O zip não é versionado no Git (está ignorado por *.zip / /backups/ no .gitignore) para não inflar o repositório.
+- Para restaurar credenciais do Supabase, usar .env.local (não é versionado).

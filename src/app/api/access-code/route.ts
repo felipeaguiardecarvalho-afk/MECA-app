@@ -1,4 +1,5 @@
 import { isAuthDisabled } from "@/lib/auth-mode";
+import { jsonRateLimitOrNull } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -12,6 +13,8 @@ const bodySchema = z.object({
  */
 export async function POST(request: Request) {
   if (isAuthDisabled()) {
+    const limited = await jsonRateLimitOrNull(request, "api/access-code");
+    if (limited) return limited;
     return NextResponse.json({ ok: true, already_granted: true });
   }
 
@@ -19,6 +22,11 @@ export async function POST(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const limited = await jsonRateLimitOrNull(request, "api/access-code", {
+    userId: user?.id ?? null,
+  });
+  if (limited) return limited;
 
   if (!user) {
     return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });

@@ -1,0 +1,31 @@
+RELATÓRIO TÉCNICO — SITUAÇÃO ATUAL DO PROJETO MECA APP
+=======================================================
+
+Atualizado: 21 de abril de 2026
+
+Resumo executivo:
+- Aplicação web funcional com fluxo de diagnóstico, dashboard e operações admin.
+- Login atual via `POST /api/auth/magic-link` com geração server-side e envio por e-mail.
+- Segurança reforçada com validação de ambiente no boot (`assertProductionEnv`),
+  recusa de `NODE_TLS_REJECT_UNAUTHORIZED=0` em produção, flags de bypass e variáveis
+  só-dev (`DEV_ANONYMOUS_USER_ID`, `E2E_INSTANT_DIAGNOSTIC`), headers de segurança e
+  rate limit (auth, access-code, score, diagnostic/premium IA com teto global).
+- `isAuthDisabled()` em produção não permite bypass (fail-fast com `assertProductionAuthConfig`).
+- MFA admin (`requireAdminWithMfa`) em PDF, `/api/admin/*`, histórico global e benchmark admin;
+  histórico admin paginado.
+- Revisão 20 abr 2026: críticos da auditoria **endereçados**; endurecimento extra no `.md`
+  de auditoria; riscos residuais em `docs/RELATORIO_AUDITORIA_SEGURANCA.md` §6–8.
+- Atualização 21 abr 2026: relatório PDF redesenhado (layout premium com capa, hero,
+  gráfico do quadrante, radar SVG dos 4 pilares, sumário em 3 blocos, checklist do
+  plano de ação, teorias ao final) e com motor de paginação block-based corrigido —
+  ver `docs/RELATORIO_ENGENHARIA_SOFTWARE.md` §7.6.
+- Operação local padrão em `http://localhost:3001`.
+
+Documentação oficial atualizada:
+- docs/RELATORIO_SITUACAO_ATUAL.md
+- docs/RELATORIO_ENGENHARIA_SOFTWARE.md
+- docs/RELATORIO_AUDITORIA_SEGURANCA.md
+- docs/RELATORIO_ENTREGA_CONSOLIDADO_ENGENHARIA.md
+
+Nota:
+Este arquivo raiz é um atalho executivo. A fonte de verdade está nos relatórios `.md`.

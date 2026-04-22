@@ -1,13 +1,20 @@
 "use client";
 
+/**
+ * @deprecated Para a rota `/dashboard`, o produto usa **`MECADashboard`** em
+ * `src/components/Dashboard/index.tsx` (ver `src/app/dashboard/page.tsx`).
+ * Mantido para referência / reutilização futura; não está montado na árvore atual.
+ */
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { RadarChart } from "@/components/charts/RadarChart";
 import { TrendLineChart } from "@/components/charts/TrendLineChart";
 import { PdfExportButton } from "@/components/PdfExportButton";
+import { DiagnosticTabs } from "@/components/DiagnosticTabs";
+import { ComparisonSelector } from "@/components/ComparisonSelector";
 import type { GlobalBenchmarkInsights } from "@/lib/benchmark-insights";
 import { BENCHMARK_SCORES, gapToBenchmark } from "@/lib/benchmark";
 import type { DiagnosticResult, MetricKey } from "@/lib/types";
-import { OFFLINE_RESULT_KEY_PREFIX } from "@/lib/meca-offline-result";
+import { logger } from "@/lib/logger";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -69,14 +76,26 @@ function shortUser(id: string): string {
   return id.length > 10 ? `${id.slice(0, 8)}…` : id;
 }
 
+function shortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+  });
+}
+
+const HISTORY_PAGE_SIZE = 100;
+const MAX_ADMIN_HISTORY_PAGES = 500;
+
 export function DashboardClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const saved = searchParams.get("saved");
   const highlight = searchParams.get("highlight");
 
-  const [rows, setRows] = useState<ResponseRow[] | null>(null);
-  const [viewerRole, setViewerRole] = useState<"admin" | "user" | null>(null);
+  const [rows, setRows] = useState<ResponseRow[]>([]);
+  const [viewerRole, setViewerRole] = useState<"admin" | "user">("user");
+  /** False until first `load()` attempt finishes (success or failure). */
+  const [initialized, setInitialized] = useState(false);
   const [benchmark, setBenchmark] =
     useState<typeof BENCHMARK_SCORES>(BENCHMARK_SCORES);
   const [globalInsights, setGlobalInsights] =
@@ -97,53 +116,104 @@ export function DashboardClient() {
     router.refresh();
   }
 
+  // ── Data fetching ──────────────────────────────────────────────────
+
   const load = useCallback(async () => {
     setLoadError(null);
     setAdminBenchmarkIncomplete(false);
     setGlobalInsights(null);
 
-    const hRes = await fetch("/api/user/history");
-    const hJson = await hRes.json().catch(() => ({}));
-
-    if (!hRes.ok || !hJson.ok) {
-      const msg =
-        typeof hJson.error === "string"
-          ? hJson.error
-          : "Falha ao carregar histórico.";
-      const detail =
-        typeof hJson.detail === "string" ? ` ${hJson.detail}` : "";
-      setLoadError(`${msg}${detail}`);
-      setRows([]);
-      setViewerRole(null);
-      return;
-    }
-
-    setRows(hJson.rows as ResponseRow[]);
-    setViewerRole(hJson.viewer?.role === "admin" ? "admin" : "user");
-
-    const bRes = await fetch("/api/benchmark");
-    const bJson = await bRes.json().catch(() => ({}));
-
-    if (hJson.viewer?.role === "admin" && bRes.status === 503) {
-      setBenchmark(BENCHMARK_SCORES);
-      setAdminBenchmarkIncomplete(true);
-      return;
-    }
-
-    if (!bRes.ok || !bJson.ok) {
-      setLoadError(
-        typeof bJson.error === "string"
-          ? bJson.error
-          : "Falha ao carregar benchmark.",
+    try {
+      const firstRes = await fetch(
+        `/api/user/history?page=1&pageSize=${HISTORY_PAGE_SIZE}`,
       );
-      return;
-    }
+      const hJson = (await firstRes.json().catch(() => ({}))) as Record<
+        string,
+        unknown
+      >;
 
-    if (bJson.scores) {
-      setBenchmark(bJson.scores);
-    }
-    if (bJson.viewer === "admin" && bJson.globalInsights) {
-      setGlobalInsights(bJson.globalInsights as GlobalBenchmarkInsights);
+      if (!firstRes.ok || !hJson.ok) {
+        const err = hJson.error;
+        const detail = hJson.detail;
+        const msg =
+          err === "mfa_required" && typeof detail === "string"
+            ? detail
+            : typeof err === "string"
+              ? `${err}${typeof detail === "string" ? ` ${detail}` : ""}`
+              : "Falha ao carregar histórico.";
+        setLoadError(msg);
+        setRows([]);
+        setViewerRole("user");
+        return;
+      }
+
+      const viewer = hJson.viewer as { role?: string } | undefined;
+      const role = viewer?.role === "admin" ? "admin" : "user";
+
+      let merged: ResponseRow[] = Array.isArray(hJson.rows)
+        ? ([...hJson.rows] as ResponseRow[])
+        : [];
+
+      const pag = hJson.pagination as
+        | { hasMore?: boolean }
+        | undefined;
+      if (role === "admin" && pag?.hasMore) {
+        let page = 2;
+        let hasMore = true;
+        while (hasMore && page <= MAX_ADMIN_HISTORY_PAGES) {
+          const r = await fetch(
+            `/api/user/history?page=${page}&pageSize=${HISTORY_PAGE_SIZE}`,
+          );
+          const j = (await r.json().catch(() => ({}))) as Record<
+            string,
+            unknown
+          >;
+          if (!r.ok || !j.ok) break;
+          if (Array.isArray(j.rows)) {
+            merged = merged.concat(j.rows as ResponseRow[]);
+          }
+          hasMore = Boolean(
+            (j.pagination as { hasMore?: boolean } | undefined)?.hasMore,
+          );
+          if (!hasMore) break;
+          page++;
+        }
+      }
+
+      setRows(merged);
+      setViewerRole(role);
+
+      const bRes = await fetch("/api/benchmark");
+      const bJson = await bRes.json().catch(() => ({}));
+
+      if (role === "admin" && bRes.status === 503) {
+        setBenchmark(BENCHMARK_SCORES);
+        setAdminBenchmarkIncomplete(true);
+        return;
+      }
+
+      if (!bRes.ok || !bJson.ok) {
+        setLoadError(
+          typeof bJson.error === "string"
+            ? bJson.error
+            : "Falha ao carregar benchmark.",
+        );
+        return;
+      }
+
+      if (bJson.scores) {
+        setBenchmark(bJson.scores);
+      }
+      if (bJson.viewer === "admin" && bJson.globalInsights) {
+        setGlobalInsights(bJson.globalInsights as GlobalBenchmarkInsights);
+      }
+    } catch (err) {
+      logger.error("[DashboardClient] load error", err);
+      setLoadError("Não foi possível carregar o dashboard.");
+      setRows([]);
+      setViewerRole("user");
+    } finally {
+      setInitialized(true);
     }
   }, []);
 
@@ -151,25 +221,18 @@ export function DashboardClient() {
     void load();
   }, [load]);
 
-  /** Junta resultado guardado no browser quando o modo dev não usa Supabase. */
-  useEffect(() => {
-    if (rows === null || !saved || typeof window === "undefined") return;
-    const raw = sessionStorage.getItem(`${OFFLINE_RESULT_KEY_PREFIX}${saved}`);
-    if (!raw) return;
-    try {
-      const row = JSON.parse(raw) as ResponseRow;
-      setRows((prev) => {
-        if (!prev) return [row];
-        if (prev.some((r) => r.id === row.id)) return prev;
-        return [...prev, row];
-      });
-    } catch {
-      /* ignore */
-    }
-  }, [rows, saved]);
+  // ── Derived state ──────────────────────────────────────────────────
 
-  const sorted = useMemo(() => rows ?? [], [rows]);
+  /** Rows sorted chronologically ASC (oldest first → trend chart reads left-to-right). */
+  const sorted = useMemo(() => {
+    const list = Array.isArray(rows) ? rows : [];
+    return [...list].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
+  }, [rows]);
 
+  /** Default-select the latest (or preferred) diagnostic. */
   useEffect(() => {
     if (!sorted.length) return;
     const ids = new Set(sorted.map((r) => r.id));
@@ -187,6 +250,7 @@ export function DashboardClient() {
     });
   }, [sorted, saved, highlight]);
 
+  /** Clear ?saved from URL after brief toast. */
   useEffect(() => {
     if (!saved) return;
     const t = setTimeout(() => {
@@ -200,10 +264,18 @@ export function DashboardClient() {
   }, [saved, router, searchParams]);
 
   const selected = useMemo(() => {
-    if (!sorted.length || !selectedId) return null;
-    return sorted.find((r) => r.id === selectedId) ?? sorted[sorted.length - 1];
+    if (!sorted.length) return null;
+    if (selectedId) {
+      return (
+        sorted.find((r) => r.id === selectedId) ??
+        sorted[sorted.length - 1] ??
+        null
+      );
+    }
+    return sorted[sorted.length - 1] ?? null;
   }, [sorted, selectedId]);
 
+  /** Rows belonging to the same user as the selected diagnostic. */
   const userRows = useMemo(() => {
     if (!sorted.length) return [];
     if (!isAdminViewer) return sorted;
@@ -211,40 +283,57 @@ export function DashboardClient() {
     return sorted.filter((r) => r.user_id === selected.user_id);
   }, [sorted, isAdminViewer, selected]);
 
-  const current = selected ? rowToResult(selected) : null;
+  const current = useMemo(
+    () => (selected ? rowToResult(selected) : null),
+    [selected],
+  );
+
+  /** Reset comparison when the primary selection changes. */
   useEffect(() => {
-    if (!selected || !userRows.length) {
-      setCompareWithId(null);
-      return;
-    }
-    const candidates = userRows.filter((r) => r.id !== selected.id);
-    if (!candidates.length) {
-      setCompareWithId(null);
-      return;
-    }
-    setCompareWithId((prev) => {
-      if (prev && candidates.some((r) => r.id === prev)) return prev;
-      const idx = userRows.findIndex((r) => r.id === selected.id);
-      if (idx > 0) return userRows[idx - 1].id;
-      return candidates[candidates.length - 1].id;
-    });
-  }, [selected, userRows]);
+    setCompareWithId(null);
+  }, [selectedId]);
 
   const comparedRow = useMemo(() => {
     if (!compareWithId) return null;
     return userRows.find((r) => r.id === compareWithId) ?? null;
   }, [compareWithId, userRows]);
 
+  const comparedResult = useMemo(
+    () => (comparedRow ? rowToResult(comparedRow) : null),
+    [comparedRow],
+  );
+
+  /** Candidates available for comparison (same user, excluding the selected one). */
+  const compareCandidates = useMemo(
+    () => userRows.filter((r) => r.id !== selected?.id),
+    [userRows, selected?.id],
+  );
+
+  const radarLegend = useMemo(() => {
+    if (!comparedRow || !selected) return undefined;
+    return [
+      { label: shortDate(selected.created_at), color: "#171717" },
+      { label: shortDate(comparedRow.created_at), color: "#4f46e5" },
+    ] as [{ label: string; color: string }, { label: string; color: string }];
+  }, [selected, comparedRow]);
+
   const trendPoints = useMemo(() => {
     if (!userRows.length) return [];
     return userRows.map((r) => ({
-      label: new Date(r.created_at).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "short",
-      }),
+      label: shortDate(r.created_at),
       value: Math.round(avgScore(r)),
     }));
   }, [userRows]);
+
+  // ── Early returns ──────────────────────────────────────────────────
+
+  if (!initialized) {
+    return (
+      <div className="ds-page flex min-h-[40vh] items-center justify-center">
+        <p className="ds-body">A carregar…</p>
+      </div>
+    );
+  }
 
   if (loadError) {
     return (
@@ -254,7 +343,7 @@ export function DashboardClient() {
     );
   }
 
-  if (viewerRole && rows && rows.length === 0) {
+  if (rows.length === 0) {
     if (isAdminViewer) {
       return (
         <div className="ds-page-narrow flex min-h-[60vh] flex-col items-center justify-center space-y-8 text-center">
@@ -285,17 +374,27 @@ export function DashboardClient() {
     );
   }
 
-  if (!rows || !current || !selected || !viewerRole) {
+  if (!selected || !current) {
     return (
-      <div className="ds-page flex min-h-[40vh] items-center justify-center">
-        <p className="ds-body">A carregar…</p>
+      <div className="ds-page flex min-h-[40vh] items-center justify-center p-6">
+        <p className="ds-body">Selecionando diagnóstico…</p>
       </div>
     );
   }
 
+  // ── Main render ────────────────────────────────────────────────────
+
   return (
     <div className="ds-page-narrow space-y-16 pb-24">
-      <div className="flex justify-end">
+      {/* Header: PDF export + sign out */}
+      <div className="flex items-center justify-between gap-4">
+        <PdfExportButton
+          title={`MECA ${new Date(selected?.created_at ?? 0).toLocaleDateString("pt-BR")}`}
+          result={current}
+          benchmarkNote={Object.entries(benchmark ?? {})
+            .map(([k, v]) => `${k}: ${v}`)
+            .join("; ")}
+        />
         <button
           type="button"
           onClick={() => void signOut()}
@@ -304,12 +403,14 @@ export function DashboardClient() {
           Sair
         </button>
       </div>
+
       {saved && (
         <p className="text-center text-sm text-gray-600">
           Diagnóstico guardado. Pode exportar o relatório em PDF quando quiser.
         </p>
       )}
 
+      {/* Admin banner */}
       {isAdminViewer && (
         <div className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-center text-sm text-gray-800">
           <strong className="font-medium">Modo administrador</strong>
@@ -329,6 +430,7 @@ export function DashboardClient() {
         </div>
       )}
 
+      {/* Admin: global insights */}
       {isAdminViewer && globalInsights && (
         <section className="space-y-10">
           <div className="space-y-2 text-center">
@@ -353,7 +455,7 @@ export function DashboardClient() {
             <div className="ds-card border border-gray-100 sm:col-span-3 lg:col-span-1">
               <p className="ds-small">Arquétipos</p>
               <ul className="mt-3 space-y-1 text-sm text-gray-700">
-                {Object.entries(globalInsights.archetypeDistribution).map(
+                {Object.entries(globalInsights.archetypeDistribution ?? {}).map(
                   ([k, v]) => (
                     <li key={k} className="flex justify-between gap-4">
                       <span>{k}</span>
@@ -376,12 +478,28 @@ export function DashboardClient() {
                 >
                   <span className="text-sm text-gray-900">{label}</span>
                   <span className="text-sm font-semibold tabular-nums text-gray-900">
-                    {Math.round(globalInsights.means[key])}
+                    {Math.round(Number(globalInsights.means?.[key] ?? 0))}
                   </span>
                 </div>
               ))}
             </div>
           </div>
+        </section>
+      )}
+
+      {/* ── TOP: Diagnostic tabs ─────────────────────────────────── */}
+      {sorted.length > 1 && (
+        <section className="space-y-3">
+          <p className="text-center text-sm text-gray-500">
+            {isAdminViewer ? "Todos os diagnósticos" : "Seus diagnósticos"}
+          </p>
+          <DiagnosticTabs
+            diagnostics={sorted}
+            selectedId={selected?.id ?? ""}
+            onChange={(id) => {
+              setSelectedId(id);
+            }}
+          />
         </section>
       )}
 
@@ -392,7 +510,7 @@ export function DashboardClient() {
         </p>
         <h1 className="ds-heading-xl text-balance">{current.archetype}</h1>
         <p className="ds-body mx-auto max-w-md">
-          {new Date(selected.created_at).toLocaleDateString("pt-BR", {
+          {new Date(selected?.created_at ?? 0).toLocaleDateString("pt-BR", {
             weekday: "long",
             day: "numeric",
             month: "long",
@@ -402,22 +520,37 @@ export function DashboardClient() {
             <span className="mt-2 block text-sm text-gray-500">
               Utilizador:{" "}
               <code className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-900">
-                {shortUser(selected.user_id)}
+                {shortUser(selected?.user_id ?? "")}
               </code>
             </span>
           )}
         </p>
       </section>
 
-      {/* 2. Chart */}
+      {/* ── MIDDLE: Comparison selector ──────────────────────────── */}
+      {compareCandidates.length > 0 && (
+        <section className="mx-auto max-w-lg">
+          <ComparisonSelector
+            candidates={compareCandidates}
+            compareWithId={compareWithId}
+            onChange={setCompareWithId}
+          />
+        </section>
+      )}
+
+      {/* 2. Radar chart (single or comparison overlay) */}
       <section className="space-y-6">
         <p className="text-center text-sm text-gray-500">Mapa das seis dimensões</p>
         <div className="rounded-2xl border border-gray-100 bg-gray-50/80 px-6 py-12">
-          <RadarChart values={current} />
+          <RadarChart
+            values={current}
+            compareValues={comparedResult}
+            legend={radarLegend}
+          />
         </div>
       </section>
 
-      {/* 3. Scores */}
+      {/* 3. Dimension scores */}
       <section className="space-y-10">
         <h2 className="ds-heading text-center">Dimensões</h2>
         <div className="mx-auto max-w-lg space-y-6">
@@ -444,7 +577,7 @@ export function DashboardClient() {
         </div>
       </section>
 
-      {/* Referência (compact) */}
+      {/* 4. Benchmark reference */}
       <section className="space-y-10">
         <div className="space-y-2 text-center">
           <h2 className="ds-heading">Referência de mercado</h2>
@@ -479,37 +612,17 @@ export function DashboardClient() {
         </div>
       </section>
 
+      {/* 5. Comparison delta table (only when comparing) */}
       {comparedRow && (
         <section className="space-y-10">
           <div className="space-y-2 text-center">
-            <h2 className="ds-heading">Comparação entre diagnósticos</h2>
+            <h2 className="ds-heading">Comparação detalhada</h2>
             <p className="ds-body text-sm">
-              Escolha qual diagnóstico comparar com o atualmente selecionado.
+              Diferença entre{" "}
+              <strong className="font-medium text-gray-900">{shortDate(selected?.created_at ?? "")}</strong>
+              {" "}e{" "}
+              <strong className="font-medium text-indigo-600">{shortDate(comparedRow.created_at)}</strong>.
             </p>
-          </div>
-          <div className="mx-auto max-w-lg">
-            <label className="block text-left">
-              <span className="mb-1.5 block text-sm font-medium text-gray-700">
-                Comparar com
-              </span>
-              <select
-                value={compareWithId ?? ""}
-                onChange={(e) => setCompareWithId(e.target.value || null)}
-                className="ds-input"
-              >
-                {userRows
-                  .filter((r) => r.id !== selected.id)
-                  .map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {new Date(r.created_at).toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </option>
-                  ))}
-              </select>
-            </label>
           </div>
           <div className="mx-auto max-w-lg space-y-6">
             {METRICS.map(({ label, key }) => {
@@ -523,7 +636,7 @@ export function DashboardClient() {
                 >
                   <span className="text-sm text-gray-900">{label}</span>
                   <div className="text-right text-sm">
-                    <p className="font-medium text-gray-900 tabular-nums">
+                    <p className="font-medium tabular-nums text-gray-900">
                       {now} vs {prev}
                     </p>
                     <p
@@ -545,14 +658,14 @@ export function DashboardClient() {
         </section>
       )}
 
-      {/* 4. Evolution */}
+      {/* 6. Evolution trend */}
       {trendPoints.length >= 2 && (
         <section className="space-y-10">
           <div className="space-y-2 text-center">
             <h2 className="ds-heading">Evolução</h2>
             <p className="ds-body text-sm">
               {isAdminViewer
-                ? `Índice médio — utilizador ${shortUser(selected.user_id)}.`
+                ? `Índice médio — utilizador ${shortUser(selected?.user_id ?? "")}.`
                 : "Índice médio ao longo dos seus diagnósticos."}
             </p>
           </div>
@@ -561,47 +674,6 @@ export function DashboardClient() {
           </div>
         </section>
       )}
-
-      {/* History */}
-      <section className="space-y-8 border-t border-gray-100 pt-16">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="ds-heading">
-            {isAdminViewer ? "Histórico" : "Histórico"}
-          </h2>
-          <PdfExportButton
-            title={`MECA ${new Date(selected.created_at).toLocaleDateString("pt-BR")}`}
-            result={current}
-            benchmarkNote={Object.entries(benchmark)
-              .map(([k, v]) => `${k}: ${v}`)
-              .join("; ")}
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {[...rows].reverse().map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => setSelectedId(r.id)}
-              className={`rounded-full px-4 py-2 text-sm transition ${
-                r.id === selectedId
-                  ? "bg-black text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
-              }`}
-            >
-              {isAdminViewer && (
-                <span className="mr-2 font-mono text-[0.65rem] text-gray-400">
-                  {shortUser(r.user_id)}
-                </span>
-              )}
-              {new Date(r.created_at).toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
-            </button>
-          ))}
-        </div>
-      </section>
 
       <p className="text-center">
         <Link

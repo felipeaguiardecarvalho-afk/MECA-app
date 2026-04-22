@@ -1,4 +1,3 @@
-import { ensureEmailAccessGrantIfNeeded } from "@/lib/auth/ensure-email-access";
 import { isAuthDisabled } from "@/lib/auth-mode";
 import { isAdmin } from "@/lib/auth/isAdmin";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
@@ -44,8 +43,6 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
   }
 
-  await ensureEmailAccessGrantIfNeeded(supabase, user.id);
-
   const admin = isAdmin(user.email);
 
   const { data: grant, error: grantErr } = await supabase
@@ -61,16 +58,6 @@ export async function GET() {
     );
   }
 
-  if (!grant) {
-    return NextResponse.json({
-      ok: true,
-      can_take_diagnostic: false,
-      has_completed_diagnostic: false,
-      is_admin: admin,
-      has_access_grant: false,
-    });
-  }
-
   const { count, error: countErr } = await supabase
     .from("responses")
     .select("*", { count: "exact", head: true })
@@ -84,6 +71,16 @@ export async function GET() {
   }
 
   const hasCompleted = (count ?? 0) > 0;
+
+  if (!grant) {
+    return NextResponse.json({
+      ok: true,
+      can_take_diagnostic: !hasCompleted,
+      has_completed_diagnostic: hasCompleted,
+      is_admin: admin,
+      has_access_grant: true,
+    });
+  }
 
   return NextResponse.json({
     ok: true,

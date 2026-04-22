@@ -14,7 +14,7 @@ export default defineConfig({
   expect: { timeout: 20_000 },
   reporter: process.env.CI ? "github" : "list",
   use: {
-    /** Porta dedicada ao UAT para não colidir com `next dev` em :3000 */
+    /** Porta dedicada ao UAT para não colidir com `next dev` (por defeito :3001) */
     baseURL: "http://127.0.0.1:3004",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",

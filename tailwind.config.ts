@@ -1,14 +1,17 @@
-/**
- * CRITICAL FILE — DO NOT MODIFY STRUCTURE
- * Breaking this file will destroy the UI
- */
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: [
-    "./src/app/**/*.{ts,tsx}",
-    "./src/components/**/*.{ts,tsx}",
-    "./src/lib/**/*.{ts,tsx}",
+  /** Scan all source under `src/` so utilities are never missed (utils, future routes, etc.). */
+  content: ["./src/**/*.{js,ts,jsx,tsx}"],
+  /** Runtime health check + fallback UI rely on these utilities — keep them in the build. */
+  safelist: [
+    "hidden",
+    "bg-black",
+    "text-white",
+    "p-10",
+    "rounded-xl",
+    "bg-red-500",
+    "p-4",
   ],
   theme: {
     extend: {
@@ -38,6 +41,11 @@ const config: Config = {
       boxShadow: {
         soft: "0 24px 48px -12px rgba(15, 23, 42, 0.08)",
         lift: "0 12px 40px -8px rgba(55, 48, 163, 0.15)",
+        glow: "0 0 0 1px rgba(99, 102, 241, 0.08), 0 16px 48px -8px rgba(99, 102, 241, 0.2)",
+        "glow-sm": "0 0 32px -4px rgba(59, 130, 246, 0.25)",
+        premium: "0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 20px 40px -12px rgba(30, 58, 138, 0.12)",
+        "premium-hover":
+          "0 8px 12px -2px rgba(15, 23, 42, 0.08), 0 28px 56px -16px rgba(30, 58, 138, 0.18)",
       },
       keyframes: {
         "fade-up": {

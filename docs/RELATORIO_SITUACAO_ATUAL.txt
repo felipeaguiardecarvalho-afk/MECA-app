@@ -1,0 +1,21 @@
+RELATORIO — Situação atual (MECA App)
+=====================================
+
+Atualizado: 22 de abril de 2026
+
+Versão canônica:
+  docs/RELATORIO_SITUACAO_ATUAL.md
+
+Resumo:
+- Diagnóstico único por ciclo até admin unlock; gate em /assessment e POST /api/score
+- Onboarding primeiro acesso: /onboarding + POST /api/user/profile (nome obrigatório)
+- Sem código de organização obrigatório no fluxo principal; /access-code redireciona (legado)
+- Login magic link; hardening env, rate limits, MFA admin, PDF/Puppeteer endurecido
+- Vitest: 216 testes / 22 ficheiros (abr. 2026)
+- Backup físico recente: backups/MECA-backup-20260421-215216/ + .zip (ver §10 do .md)
+
+Atualização 21 abr 2026:
+- PDF premium + motor de paginação block-based (ver RELATORIO_ENGENHARIA_SOFTWARE §7.6)
+
+Atualização 22 abr 2026:
+- Relatórios técnicos alinhados a onboarding, grant SELF (service role), gate /assessment

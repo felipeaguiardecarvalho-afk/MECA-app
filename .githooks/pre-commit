@@ -1,0 +1,13 @@
+#!/bin/sh
+# Pre-commit hook: runs lint + unit tests (fast feedback).
+# E2E tests are skipped here to keep commits fast — run `npm run verify` for the full suite.
+
+echo "🔍 pre-commit: lint + unit tests..."
+npm run precommit
+
+if [ $? -ne 0 ]; then
+  echo "❌ Pre-commit checks failed. Fix the issues above, then try again."
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed."

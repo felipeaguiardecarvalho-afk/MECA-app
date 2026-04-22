@@ -5,8 +5,13 @@ node_modules/
 .env.*.local
 .env.production
 .env.production.local
+.vercel/
+
 npm-debug.log*
 .DS_Store
+
+# Local trust material (developer machine specific)
+/gmail-norton-root-ca.pem
 
 # Playwright
 /test-results/
@@ -16,3 +21,15 @@ npm-debug.log*
 # Backups (keep local, avoid bloating git)
 /backups/
 *.zip
+
+# IDE / local tooling (não versionar)
+.claude/
+.cursor/
+tsconfig.tsbuildinfo
+
+# Artefactos locais com credenciais ou ruído — nunca commit
+API Key Resend - MECA.txt
+API Cursor x TestSprite.txt
+Foto Hero landing.png
+IMG-*.jpg
+testsprite_tests/

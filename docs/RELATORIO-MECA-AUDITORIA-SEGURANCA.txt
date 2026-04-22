@@ -1,0 +1,16 @@
+Alias / atalho — Auditoria de seguranca MECA
+==============================================
+
+Atualizado: 22 de abril de 2026
+
+Documento canonico:
+  docs/RELATORIO_AUDITORIA_SEGURANCA.md
+
+Estado: bloqueadores criticos da secao 5 corrigidos; revisao 20 abr 2026 alinha
+  env fail-fast, TRUST_PROXY, login-intent neutro, logs e limites IA; riscos
+  residuais nas secoes 6-8 do .md.
+
+Nota 21 abr 2026: redesign visual e refactor do motor de paginacao do relatorio
+  PDF (src/app/api/report/generate/route.ts) — sem alteracao de superficie de
+  seguranca (MFA admin, sanitize-html, rede bloqueada no Puppeteer, Chart local
+  em public/vendor mantidos).

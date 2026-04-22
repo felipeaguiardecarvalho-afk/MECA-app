@@ -1,79 +1,17 @@
-================================================================================
-RELATÓRIO TÉCNICO — ENGENHARIA DE SOFTWARE (MECA APP)
-================================================================================
+RELATORIO — Engenharia de software (atalho)
+===========================================
 
-Projeto: MECA — diagnóstico comportamental (Next.js 15 + Supabase)
-Âmbito: código na raiz do repositório (App Router).
-Data de referência: abril de 2026 — estado atual do repositório.
+Atualizado: 21 de abril de 2026
 
---------------------------------------------------------------------------------
-1. STACK
---------------------------------------------------------------------------------
+Versão oficial:
+  docs/RELATORIO_ENGENHARIA_SOFTWARE.md
 
-Next.js 15 (App Router), React 19, Tailwind CSS 3, Supabase, Vitest.
+Nota: Vitest ~190 testes / ~22 ficheiros; MFA completo nas rotas admin sensíveis;
+  premium com rate limit por utilizador e global; PDF e SMTP endurecidos;
+  env fail-fast e modo dev bloqueado em produção — detalhe no .md e na auditoria.
 
---------------------------------------------------------------------------------
-2. ARQUITETURA — MÓDULOS E ROTAS (ATUALIZADO)
---------------------------------------------------------------------------------
-
-LOGIN (OTP / magic link)    src/app/login/page.tsx, LoginForm.tsx
-                             signInWithOtp; ?next= para destino pós-sessão
-CALLBACK                    src/app/auth/callback/route.ts
-Código de acesso            src/app/access-code/ — POST /api/access-code (RPC validate_access_code)
-Estado de acesso            GET /api/user/access-state (can_take_diagnostic, grant, admin)
-Questionário (60 itens)     src/lib/diagnostic-engine.ts
-Submissão / score           POST /api/score (grant + can_take_diagnostic; bloqueio após concluir)
-Histórico                   GET /api/user/history
-Admin                       GET /api/admin/diagnostic-overview, POST /api/admin/unlock-diagnostic
-Persistência                responses, access_grants (can_take_diagnostic), access_codes; RLS
-Mapeamento DB → UI          meca-dashboard-scores.ts
-Motor plano de ação         action-plan.ts (pilar mais baixo)
-Dashboard                   components/Dashboard → app/dashboard/page.tsx
-Plano de ação               app/plano-de-acao/
-Navegação / landing         AppNav.tsx, HomeLanding + HomeLandingActions
-Middleware                  middleware.ts, auth-mode.ts
-Layout / estilos            layout.tsx, globals.css, Tailwind, StyleGuard, etc.
-Helper admin                lib/auth/isAdmin.ts (MASTER_ADMIN_EMAIL)
-
---------------------------------------------------------------------------------
-3. FLUXO DE ENTRADA (INCLUI PÁGINA DE LOGIN)
---------------------------------------------------------------------------------
-
-1) Rotas protegidas sem sessão → /login?next=...
-2) /login: OTP por e-mail; link mágico → /auth/callback
-3) Callback define sessão e redireciona (ex. /access-code)
-4) access_grants via código; can_take_diagnostic controla novo /assessment
-5) AuthNav e HomeLandingActions usam /api/user/access-state para CTAs
-
-A rota /login é parte integral do produto com autenticação ativa.
-
---------------------------------------------------------------------------------
-4. DASHBOARD — DADOS
---------------------------------------------------------------------------------
-
-Bootstrap sessionStorage, ?saved=, GET /api/user/history. getArchetype no cartão.
-
---------------------------------------------------------------------------------
-5. PLANO DE AÇÃO
---------------------------------------------------------------------------------
-
-getActionPlan por pilar mais baixo. Protegido no middleware.
-
---------------------------------------------------------------------------------
-6. ESTILOS, BUILD, TESTES
---------------------------------------------------------------------------------
-
-Tailwind + ds-*; npm run clean para cache .next; testes: diagnostic-engine, action-plan,
-styling-system, access-control.
-
---------------------------------------------------------------------------------
-7. RESUMO EXECUTIVO
---------------------------------------------------------------------------------
-
-App com /login (OTP Supabase), callback, access-code, um diagnóstico por utilizador
-(can_take_diagnostic) e unlock admin. Plano de ação por action-plan.ts. Middleware
-protege /assessment, /dashboard, /plano-de-acao; não autenticados → /login.
-
-================================================================================
-Fim do relatório
-================================================================================
+Atualização 21 abr 2026:
+  Relatório PDF (GET /api/report/generate) redesenhado (layout premium com radar SVG,
+  gráfico do quadrante, checklist do plano de ação) e com novo motor de paginação
+  block-based (break-before:page por secção, break-inside:avoid nos blocos atómicos,
+  break-after:avoid-page nos títulos, sem truncagem silenciosa). Detalhe no §7.6 do .md.

@@ -5,7 +5,9 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <p className="py-24 text-center text-lg text-gray-500">A carregar…</p>
+        <div className="section-meca text-center text-base text-gray-500 sm:text-lg">
+          <div className="container-meca">A carregar…</div>
+        </div>
       }
     >
       <LoginForm />

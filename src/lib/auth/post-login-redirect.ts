@@ -3,8 +3,9 @@
  * Keep in sync with middleware expectations for logged-in users.
  */
 export const ALLOWED_AFTER_LOGIN = [
-  "/access-code",
   "/dashboard",
+  "/fundamentos",
+  "/arquetipos",
   "/assessment",
   "/plano-de-acao",
 ] as const;

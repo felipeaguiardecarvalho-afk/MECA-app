@@ -1,0 +1,53 @@
+# Deploy manual para produção na Vercel.
+#
+# GitHub → Actions → "Deploy production (Vercel)" → Run workflow
+#
+# Secrets obrigatórios (Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN              https://vercel.com/account/tokens
+#   VERCEL_ORG_ID             .vercel/project.json → "orgId" (ou painel Vercel)
+#   VERCEL_PROJECT_ID         .vercel/project.json → "projectId"
+#   NEXT_PUBLIC_SUPABASE_URL
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY
+#   SUPABASE_SERVICE_ROLE_KEY   (o build Next corre assertProductionEnv em produção)
+#
+# Opcional no build CI (recomendado alinhar à Vercel):
+#   NEXT_PUBLIC_SITE_URL        ex. https://metodomeca.com.br
+
+name: Deploy production (Vercel)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Production build
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+
+      - name: Deploy to Vercel (production)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx vercel@latest deploy --prod --yes --token="$VERCEL_TOKEN"

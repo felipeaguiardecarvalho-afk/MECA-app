@@ -21,8 +21,7 @@ export function isMasterAccountEmail(email: string | null | undefined): boolean 
 }
 
 /**
- * Pedido de login no formulário é o fluxo master (generateLink, sem OTP público).
- * Inclui o canónico e o opcional em env.
+ * E-mail do pedido de login corresponde à conta master (mesmo critério que `isMasterAccountEmail`).
  */
 export function isMasterLoginRequestEmail(email: string): boolean {
   return isMasterAccountEmail(email);

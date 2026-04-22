@@ -17,8 +17,9 @@ describe("styling system guardrails", () => {
     expect(idxComp).toBeLessThan(idxUtil);
   });
 
-  it("layout imports globals.css", () => {
+  it("layout imports globals.css and critical-fallback.css", () => {
     const layout = readFileSync(join(root, "app", "layout.tsx"), "utf8");
     expect(layout).toMatch(/import\s+["']\.\/globals\.css["']/);
+    expect(layout).toMatch(/import\s+["']\.\/critical-fallback\.css["']/);
   });
 });

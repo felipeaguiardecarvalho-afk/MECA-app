@@ -1,5 +1,6 @@
 import { isAuthDisabled } from "@/lib/auth-mode";
 import { isAdmin } from "@/lib/auth/isAdmin";
+import { requireAdminWithMfa } from "@/lib/auth/require-admin-mfa";
 import {
   buildGlobalInsights,
   type ResponseMetricsRow,
@@ -65,6 +66,9 @@ export async function GET() {
       },
     );
   }
+
+  const guard = await requireAdminWithMfa(supabase);
+  if (!guard.ok) return guard.response;
 
   const service = createServiceRoleClient();
   if (!service) {

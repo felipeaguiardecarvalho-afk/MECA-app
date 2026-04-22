@@ -1,4 +1,5 @@
-import type { LoginPhase } from "@/lib/auth/login-phase";
+import { logger, maskEmail } from "@/lib/logger";
+import { jsonRateLimitOrNull } from "@/lib/rate-limit";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -8,30 +9,33 @@ const bodySchema = z.object({
 });
 
 /**
- * Determines login UX: OTP step until first diagnostic is done; then magic link only.
- * Requires SUPABASE_SERVICE_ROLE_KEY; otherwise defaults to first_access (OTP step).
+ * Anti-enumeration: HTTP body is always `{ "success": true }` (except 429 rate limit).
+ * Real outcomes are logged server-side only.
  */
 export async function POST(request: Request) {
+  const limited = await jsonRateLimitOrNull(request, "api/auth/login-intent");
+  if (limited) return limited;
+
   let json: unknown;
   try {
     json = await request.json();
   } catch {
-    return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
+    logger.warn("[login-intent] invalid JSON body");
+    return NextResponse.json({ success: true });
   }
 
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "validation" }, { status: 400 });
+    logger.warn("[login-intent] validation failed");
+    return NextResponse.json({ success: true });
   }
 
   const email = parsed.data.email.trim();
   const service = createServiceRoleClient();
 
   if (!service) {
-    return NextResponse.json({
-      ok: true,
-      phase: "first_access" satisfies LoginPhase,
-    });
+    logger.warn("[login-intent] service role unavailable; skipping RPC");
+    return NextResponse.json({ success: true });
   }
 
   const { data, error } = await service.rpc("meca_email_login_phase", {
@@ -39,22 +43,16 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    console.error("[login-intent]", error.message);
-    return NextResponse.json({
-      ok: true,
-      phase: "first_access" satisfies LoginPhase,
+    logger.error("[login-intent] rpc failed", {
+      recipient: maskEmail(email),
+      message: error.message,
+    });
+  } else {
+    logger.info("[login-intent] rpc ok", {
+      recipient: maskEmail(email),
+      phase: data ?? null,
     });
   }
 
-  const phase = (data as string | null) ?? "first_access";
-  const allowed: LoginPhase[] = [
-    "first_access",
-    "returning_incomplete",
-    "returning_done",
-  ];
-  const safe = allowed.includes(phase as LoginPhase)
-    ? (phase as LoginPhase)
-    : "first_access";
-
-  return NextResponse.json({ ok: true, phase: safe });
+  return NextResponse.json({ success: true });
 }

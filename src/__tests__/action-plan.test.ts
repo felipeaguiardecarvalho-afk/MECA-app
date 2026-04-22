@@ -12,16 +12,18 @@ describe("getActionPlan", () => {
     expect(p.pillarKey).toBe("mentalidade");
     expect(p.title).toContain("protagonismo");
     expect(p.actions).toHaveLength(4);
-    expect(p.actions[0]).toContain("soluções");
+    expect(p.actions[0]).toContain("solução");
+    expect(p.actions[0]).toContain("Fundamentos");
   });
 
   it("escolhe Engajamento quando é o mínimo", () => {
     const p = getActionPlan(s(80, 15, 70, 70));
     expect(p.pillarKey).toBe("engajamento");
     expect(p.title).toContain("visibilidade");
-    expect(p.actions.some((a) => a.toLowerCase().includes("comunique"))).toBe(
+    expect(p.actions.some((a) => a.toLowerCase().includes("comunica"))).toBe(
       true,
     );
+    expect(p.actions.every((a) => a.includes("Fundamentos:"))).toBe(true);
   });
 
   it("escolhe Cultura quando é o mínimo", () => {

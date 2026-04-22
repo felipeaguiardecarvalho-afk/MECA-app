@@ -15,3 +15,13 @@ major_version = 15
 [db.seed]
 enabled = true
 sql_paths = ["./seed.sql"]
+
+# Local (`supabase start`): redirects do GoTrue alinhados à app em :3001
+[auth]
+enabled = true
+site_url = "http://localhost:3001"
+additional_redirect_urls = [
+  "http://localhost:3001/auth/callback",
+  "http://127.0.0.1:3001/auth/callback",
+  "http://localhost:3000/auth/callback",
+]

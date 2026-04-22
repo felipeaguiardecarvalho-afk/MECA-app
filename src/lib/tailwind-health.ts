@@ -19,7 +19,11 @@ export function isTailwindCssApplied(): boolean {
   const radius = window.getComputedStyle(testSurface).borderRadius;
   document.body.removeChild(testSurface);
 
-  const bgOk = bg === "rgb(0, 0, 0)" || bg === "rgb(0,0,0)";
+  const bgOk =
+    bg === "rgb(0, 0, 0)" ||
+    bg === "rgb(0,0,0)" ||
+    bg === "rgba(0, 0, 0, 1)" ||
+    bg === "rgba(0,0,0,1)";
   const roundedOk =
     radius !== "0px" && radius !== "" && parseFloat(radius) > 0;
 

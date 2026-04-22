@@ -1,0 +1,33 @@
+RELATORIO — Engenharia de software (MECA App)
+==============================================
+
+Atualizado: 22 de abril de 2026
+
+Versão canônica:
+  docs/RELATORIO_ENGENHARIA_SOFTWARE.md
+
+Resumo rápido:
+- Next.js 15 + React 19 + Supabase
+- Login atual: POST /api/auth/magic-link (generateLink server-side + envio por e-mail)
+- /auth/confirm com Suspense (compatibilidade Next 15)
+- Rotas API canônicas em src/app/api/**/route.ts
+- Hardening: assertProductionEnv (flags dev proibidas em prod), TLS global em prod,
+  headers, rate limits (auth, access-code, score, premium IA por user + teto global),
+  TRUST_PROXY para IP, logger com PII redigida, sem sessionStorage/localStorage sensível no src/
+- Admin: requireAdminWithMfa em PDF, /api/admin/*, histórico e benchmark (ramos admin); histórico admin paginado
+- Vitest: 216 testes / 22 ficheiros (abr. 2026)
+- Onboarding: /onboarding + POST /api/user/profile; gate /assessment (diagnóstico único)
+- Dev local padrão: http://localhost:3001
+
+Atualização 21 abr 2026:
+- Relatório PDF (GET /api/report/generate) redesenhado com layout premium (capa,
+  hero do arquétipo, gráfico do quadrante MECA, radar SVG dos 4 pilares, sumário
+  executivo em 3 blocos, barras por pilar, identidade do arquétipo, plano de ação
+  em checklist, teorias ao final).
+- Motor de paginação block-based implementado em route.ts: `.page` sem
+  overflow:hidden/min-height; break-before:page por secção; break-inside:avoid em
+  blocos atómicos (exec-block, pillar-card, arch-identity/arch-block, action-step,
+  theory-card, closing-card); break-after:avoid-page em títulos/kickers/eyebrows;
+  rodapés absolutos por secção removidos.
+- Puppeteer: preferCSSPageSize:true, margem 0.5cm top/bottom.
+- Detalhe no §7.6 do .md.

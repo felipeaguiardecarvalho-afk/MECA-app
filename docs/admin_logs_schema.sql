@@ -1,0 +1,5 @@
+-- Superseded by supabase/migrations/0009_admin_audit_logs.sql.
+-- The persistent admin audit table is now `public.admin_audit_logs`
+-- (RLS-restricted to the master admin via public.is_admin(), service-role
+-- writes only). This file is kept as a breadcrumb for anyone searching for
+-- the old `admin_logs` name.

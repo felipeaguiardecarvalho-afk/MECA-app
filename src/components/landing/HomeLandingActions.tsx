@@ -60,32 +60,24 @@ export function HomeLandingActions() {
 
   if (authDisabledClient()) {
     return (
-      <Link href="/assessment" className="ds-btn-primary">
+      <Link href="/diagnostico" className="ds-btn-primary">
         Iniciar Diagnóstico MECA
       </Link>
     );
   }
 
-  /** Visitante sem sessão: /login → callback → /assessment (grant por e-mail) */
+  /** Visitante sem sessão: mostra a introdução antes do fluxo protegido. */
   if (state === null) {
     return (
       <button
         type="button"
         onClick={() => {
-          router.push("/login?next=/assessment");
+          router.push("/diagnostico");
         }}
         className="ds-btn-primary"
       >
         Iniciar Diagnóstico MECA
       </button>
-    );
-  }
-
-  if (!state.has_access_grant) {
-    return (
-      <Link href="/access-code" className="ds-btn-primary">
-        Inserir código de acesso
-      </Link>
     );
   }
 
@@ -99,7 +91,7 @@ export function HomeLandingActions() {
 
   if (state.can_take_diagnostic) {
     return (
-      <Link href="/assessment" className="ds-btn-primary">
+      <Link href="/diagnostico" className="ds-btn-primary">
         Iniciar Diagnóstico MECA
       </Link>
     );

@@ -5,17 +5,19 @@ import {
   MECA_QUESTIONS,
   pillarDisplayLabel,
 } from "@/lib/diagnostic-engine";
-import {
-  DASHBOARD_BOOTSTRAP_KEY,
-  diagnosticRowToMECAScores,
-} from "@/lib/meca-dashboard-scores";
-import { OFFLINE_RESULT_KEY_PREFIX } from "@/lib/meca-offline-result";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const QUESTION_SECONDS = 15;
 
-const E2E_SESSION_FLAG = "__meca_e2e_instant_submitted";
+/**
+ * Module-level guard preventing the E2E instant-diagnostic path from
+ * double-submitting under React StrictMode (which mounts effects twice
+ * in dev). Pure in-memory flag — nothing persisted to the browser.
+ * See `src/__tests__/no-browser-storage.test.ts` for the enforcement
+ * that forbids any storage-backed replacement.
+ */
+let e2eInstantSubmitted = false;
 
 export type AssessmentClientProps = {
   /** Apenas E2E: submete automaticamente todas as respostas como 3 (neutras). */
@@ -71,64 +73,9 @@ export function AssessmentClient({
       return;
     }
 
-    if (data.diagnostic && typeof data.id === "string") {
-      try {
-        const scores = diagnosticRowToMECAScores(
-          data.diagnostic as {
-            mentalidade: number;
-            engajamento: number;
-            cultura: number;
-            performance: number;
-          },
-        );
-        sessionStorage.setItem(
-          DASHBOARD_BOOTSTRAP_KEY,
-          JSON.stringify({
-            id: data.id,
-            scores,
-            at: Date.now(),
-          }),
-        );
-      } catch {
-        /* ignore */
-      }
-    }
-
-    if (
-      data.persisted === false &&
-      data.diagnostic &&
-      typeof data.id === "string"
-    ) {
-      const d = data.diagnostic as {
-        mentalidade: number;
-        engajamento: number;
-        cultura: number;
-        performance: number;
-        direction: number;
-        capacity: number;
-        archetype: string;
-      };
-      const row = {
-        id: data.id,
-        user_id: "local-offline",
-        created_at: new Date().toISOString(),
-        mentalidade: d.mentalidade,
-        engajamento: d.engajamento,
-        cultura: d.cultura,
-        performance: d.performance,
-        direction: d.direction,
-        capacity: d.capacity,
-        archetype: d.archetype,
-      };
-      try {
-        sessionStorage.setItem(
-          `${OFFLINE_RESULT_KEY_PREFIX}${data.id}`,
-          JSON.stringify(row),
-        );
-      } catch {
-        /* ignore quota / private mode */
-      }
-    }
+    // Intentionally no browser-storage writes here. Scores/archetype are PII
+    // and must be re-fetched from `GET /api/user/history` on the next page;
+    // the dashboard's existing loading state absorbs the brief round-trip.
 
     router.push(`/dashboard?saved=${encodeURIComponent(data.id)}`);
     router.refresh();
@@ -137,14 +84,8 @@ export function AssessmentClient({
   useEffect(() => {
     if (!e2eInstantDiagnostic) return;
     if (typeof window === "undefined") return;
-    let skip = false;
-    try {
-      if (sessionStorage.getItem(E2E_SESSION_FLAG)) skip = true;
-      else sessionStorage.setItem(E2E_SESSION_FLAG, "1");
-    } catch {
-      return;
-    }
-    if (skip) return;
+    if (e2eInstantSubmitted) return;
+    e2eInstantSubmitted = true;
     void submit(emptyAnswers());
   }, [e2eInstantDiagnostic, submit]);
 
@@ -220,42 +161,47 @@ export function AssessmentClient({
 
   if (phase === "sending") {
     return (
-      <div className="ds-page flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center text-center">
-        <div className="max-w-2xl space-y-6">
-          <p className="text-4xl font-semibold tracking-tight text-gray-900 md:text-5xl">
-            A preparar o seu mapa…
-          </p>
-          <p className="ds-body">Só um instante.</p>
+      <section className="flex min-h-[calc(100dvh-4rem)] w-full flex-col items-center justify-center py-12 sm:py-16 lg:py-24">
+        <div className="container-meca text-center">
+          <div className="mx-auto max-w-2xl space-y-6 sm:space-y-8">
+            <p className="text-balance text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
+              A preparar o seu mapa…
+            </p>
+            <p className="text-base leading-relaxed text-gray-600 sm:text-lg">
+              Só um instante.
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   const progressPct = ((index + 1) / total) * 100;
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col justify-center px-6 py-16">
-      <div className="mx-auto mb-10 w-full max-w-2xl">
-        <div className="h-px w-full overflow-hidden bg-gray-100">
-          <div
-            className="h-full bg-gray-900 transition-all duration-500"
-            style={{ width: `${progressPct}%` }}
-          />
+    <section className="flex min-h-[calc(100dvh-4rem)] w-full flex-col justify-center py-12 sm:py-16 lg:py-24">
+      <div className="container-meca">
+        <div className="mx-auto mb-8 w-full max-w-6xl sm:mb-10">
+          <div className="h-px w-full overflow-hidden bg-gray-100">
+            <div
+              className="h-full bg-gray-900 transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="mx-auto max-w-2xl space-y-12 text-center">
+        <div className="mx-auto min-w-0 max-w-6xl space-y-6 text-center sm:space-y-10 lg:space-y-12">
         <p className="text-sm text-gray-500">{pillarDisplayLabel(q.pillar)}</p>
 
-        <p className="text-2xl font-semibold tabular-nums text-gray-900">
+        <p className="text-xl font-semibold tabular-nums text-gray-900 sm:text-2xl">
           {secondsLeft}s
         </p>
 
-        <h1 className="text-balance text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+        <h1 className="text-balance break-words text-2xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
           {q.text}
         </h1>
 
-        <div className="flex justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
           {[1, 2, 3, 4, 5].map((n) => {
             const selected = answers[qKey] === n;
             return (
@@ -264,7 +210,7 @@ export function AssessmentClient({
                 type="button"
                 onClick={() => onPick(n)}
                 disabled={saving}
-                className={`flex h-12 w-12 items-center justify-center rounded-xl text-base font-semibold transition md:h-14 md:w-14 md:text-lg ${
+                className={`flex h-11 w-11 touch-manipulation items-center justify-center rounded-xl text-base font-semibold transition sm:h-12 sm:w-12 md:h-14 md:w-14 md:text-lg ${
                   selected
                     ? "bg-black text-white"
                     : "border border-gray-200 bg-white text-gray-900 hover:border-gray-300"
@@ -286,7 +232,8 @@ export function AssessmentClient({
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,89 +1,36 @@
-================================================================================
-RELATÓRIO — AUDITORIA DE SEGURANÇA (MECA APP)
-================================================================================
+RELATORIO — Auditoria de seguranca (MECA App)
+=============================================
 
-Projeto: MECA — diagnóstico comportamental (Next.js + Supabase)
-Âmbito: superfície de ataque, segredos, dados e controlos de acesso.
-Nota: não substitui penetration test nem auditoria formal de infraestrutura.
-Data de referência: abril de 2026 — estado atual do repositório.
+Atualizado: 21 de abril de 2026
 
---------------------------------------------------------------------------------
-1. AUTENTICAÇÃO E AUTORIZAÇÃO (ATUALIZADO)
---------------------------------------------------------------------------------
+Versao canonica:
+  docs/RELATORIO_AUDITORIA_SEGURANCA.md
 
-PÁGINA DE LOGIN — /login (LoginForm.tsx): entrada por e-mail sem senha persistente;
-OTP / magic link via Supabase (signInWithOtp). Destino após sessão: ?next= (ex. /access-code).
+Estado (revisao 20 abr 2026):
+  Bloqueadores CRITICOS da secao 5 corrigidos (MFA admin em history/benchmark,
+  PDF/Puppeteer, TLS SMTP, rate limit premium por utilizador + global).
+  Endurecimento extra: assertProductionEnv bloqueia DEV_ANONYMOUS_USER_ID,
+  E2E_INSTANT_DIAGNOSTIC e flags de bypass; isAuthDisabled() em producao
+  chama assertProductionAuthConfig (fail-fast); TRUST_PROXY para IP em
+  rate limit; login-intent com corpo neutro e logs mascarados; logger com PII redigida.
 
-CALLBACK — /auth/callback: cookies de sessão; alinhar Redirect URLs no projeto Supabase.
+Atualizacao 21 abr 2026:
+  Redesign visual e refactor do motor de paginacao do relatorio PDF
+  (src/app/api/report/generate/route.ts). Mudanca e cosmetica + paginacao;
+  NAO altera superficie de seguranca:
+    - requireAdminWithMfa mantido em GET /api/report/generate
+    - sanitize-html aplicado ao HTML renderizado
+    - Puppeteer continua com rede bloqueada (so data: / about:)
+    - Chart local em public/vendor, sem download externo
+    - Sem --no-sandbox em producao
 
-MIDDLEWARE — Sem sessão em rotas protegidas → /login?next=... Com sessão: access_grants
-para dashboard/assessment/plano-de-acao; /assessment exige can_take_diagnostic.
+Riscos residuais (ver .md secoes 6-8):
+- operacao de TRUST_PROXY / proxies
+- superficie LLM (Claude) / prompt injection
+- Resend/FROM e deliverability
 
-CÓDIGO DE ACESSO — /access-code; POST /api/access-code + RPC validate_access_code.
-
-ADMIN — MASTER_ADMIN_EMAIL + SUPABASE_SERVICE_ROLE_KEY nas APIs admin; nunca confiar no
-email vindo do body do cliente.
-
-MODO SEM LOGIN — NEXT_PUBLIC_DISABLE_AUTH desativa gates (só dev).
-
-Superfície explícita: o utilizador usa a rota /login no fluxo normal com auth ativa.
-
---------------------------------------------------------------------------------
-2. SEGREDOS E CHAVES
---------------------------------------------------------------------------------
-
-NEXT_PUBLIC_* Supabase — públicas; RLS obrigatório.
-SUPABASE_SERVICE_ROLE_KEY — só servidor.
-MASTER_ADMIN_EMAIL — só servidor.
-.env.local fora do Git.
-
---------------------------------------------------------------------------------
-3. DADOS E STORAGE
---------------------------------------------------------------------------------
-
-responses com RLS; sessionStorage (scores) — risco XSS; CSP e sanitização.
-
---------------------------------------------------------------------------------
-4. ESTILOS NO CLIENTE
---------------------------------------------------------------------------------
-
-StyleGuard / TailwindFallbackBoundary — fiabilidade UI, não segurança perimetral.
-
---------------------------------------------------------------------------------
-5. REDE
---------------------------------------------------------------------------------
-
-HTTPS em produção para cookies e links de magic login.
-
---------------------------------------------------------------------------------
-6. SUPABASE
---------------------------------------------------------------------------------
-
-Redirect URLs incluindo /auth/callback e origem da app. Rever RLS nas tabelas.
-
---------------------------------------------------------------------------------
-7. BUILD
---------------------------------------------------------------------------------
-
-Cache .next corrompido — disponibilidade; npm run clean com servidor parado.
-
---------------------------------------------------------------------------------
-8. CHECKLIST PRODUÇÃO
---------------------------------------------------------------------------------
-
-[ ] Auth desligada inativa em produção
-[ ] Service role só no servidor
-[ ] Redirect URLs Auth corretos (/login OTP)
-[ ] Rotas sensíveis com sessão + grant
-[ ] /login documentada e testada no fluxo
-
---------------------------------------------------------------------------------
-9. RESUMO
---------------------------------------------------------------------------------
-
-Login OTP em /login; gates e diagnóstico único no servidor. Service role crítico.
-XSS aumenta impacto de sessionStorage.
-
-================================================================================
-Fim do relatório
-================================================================================
+Controles ja presentes:
+- magic link server-side; action_link nunca no JSON; redirectTo com getSiteOrigin
+- assertProductionEnv no boot (TLS global, flags proibidas); headers em next.config.ts
+- rate limit em varias rotas; premium IA com limites e teto global
+- requireAdminWithMfa em report/generate, /api/admin/*, ramos admin de history e benchmark

@@ -1,26 +1,19 @@
-================================================================================
-RELATÓRIO — PERGUNTAS DO DIAGNÓSTICO MECA (REFERÊNCIA OPERACIONAL)
-Última atualização: 2026-04-11
-Fonte canónica (texto literal, ordem e ids): src/lib/diagnostic-engine.ts (MECA_QUESTIONS)
-================================================================================
+RELATORIO — Perguntas do diagnóstico MECA
+=========================================
 
-RESUMO
---------------------------------------------------------------------------------
-- Total: 60 perguntas (escala Likert 1–5 por item).
-- Ordem: ids numéricos 1 → 60 (chaves JSON nas respostas: "1" … "60").
-- Pilares (campo pillar):
-    mentalidade     — itens 1–18   (18)
-    engajamento     — itens 19–36  (18)
-    cultura         — itens 37–46  (10)
-    performance     — itens 47–60  (14)  [rótulo UX: ALTA PERFORMANCE]
+Atualizado: 21 de abril de 2026
 
-As seis métricas do produto (mentalidade, engajamento, cultura, performance,
-direction, capacity) continuam a ser persistidas: as quatro primeiras são médias
-do pilar; direction e capacity são derivadas no motor (ver computeDiagnostic).
+Fonte canônica:
+  src/lib/diagnostic-engine.ts (MECA_QUESTIONS)
 
-NÃO reproduzir os textos neste ficheiro — qualquer auditoria deve usar o código
-fonte para garantir correspondência caractere a caractere.
+Referência expandida (mesma data):
+  docs/RELATORIO-MECA-PERGUNTAS-DIAGNOSTICO.txt
 
-================================================================================
-FIM
-================================================================================
+Resumo estrutural:
+- 60 perguntas
+- Escala Likert 1..5
+- IDs "1".."60"
+- Pilares: mentalidade (1-18), engajamento (19-36), cultura (37-46),
+  performance (47-60)
+
+Nota: a estrutura das 60 perguntas permanece inalterada em 21 abr 2026.

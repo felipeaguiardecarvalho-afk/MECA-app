@@ -1,11 +1,22 @@
-MECA App - Resumo tecnico da pagina/aplicacao
+RESUMO DA PÁGINA MECA
+=====================
+
+Atualizado: 21 de abril de 2026
+
+Resumo funcional e técnico consolidado:
+  docs/RELATORIO_SITUACAO_ATUAL.md
+
+Segurança / auditoria:
+  docs/RELATORIO_AUDITORIA_SEGURANCA.md — críticos endereçados; revisão 20 abr 2026
+  (env fail-fast, modo dev bloqueado em produção, TRUST_PROXY, login-intent neutro,
+  logs com PII redigida, limites IA globais). Riscos residuais em §6–8.
 
 1) Stack e arquitetura
 - Frontend: Next.js (App Router) + React + TypeScript.
 - Auth e dados: Supabase (Auth + tabelas como responses e access_grants).
-- Navegacao principal:
+- Navegação principal:
   - / = landing page
-  - /login = autenticacao por e-mail
+  - /login = autenticação por e-mail (magic link)
   - /assessment = questionario/diagnostico
   - /dashboard = resultado, historico e comparacao
   - /access-code = ponte de grant/acesso
@@ -17,21 +28,17 @@ MECA App - Resumo tecnico da pagina/aplicacao
 - O middleware verifica se existe access_grant para permitir o fluxo correto.
 - Se o usuario ja concluiu o diagnostico e nao pode refaze-lo, /assessment redireciona para /dashboard.
 
-3) Fluxo de login
+3) Fluxo de login (canonico)
 - O usuario informa o e-mail em /login.
 - O frontend chama POST /api/auth/magic-link.
-- Quando existe service role:
-  - a API usa auth.admin.generateLink
-  - o frontend faz verifyOtp com o token retornado
-  - a sessao e criada no browser sem depender do OTP publico
-- Quando esse caminho nao esta disponivel:
-  - o frontend usa supabase.auth.signInWithOtp
-  - o usuario recebe o magic link por e-mail
+- O servidor usa auth.admin.generateLink, envia o link por e-mail e responde apenas
+  { sent: true } (sem action_link/token na resposta HTTP).
+- O usuario abre o link → /auth/confirm (hash) ou fluxo com /auth/callback (codigo PKCE)
+  conforme configuracao Supabase.
 
-4) Como o app evita "email rate limit exceeded"
-- O limite ocorre no fluxo publico signInWithOtp do Supabase Auth.
-- O app pode contornar isso usando generateLink no servidor com service role.
-- Assim, acessos repetidos ao dashboard/login nao dependem do envio publico de e-mail.
+4) Rate limit e e-mail
+- Rotas de auth e magic link tem rate limit aplicado no servidor.
+- O caminho generateLink + SMTP/Resend reduz dependencia do rate limit publico do Auth.
 
 5) Fluxo do diagnostico
 - O usuario responde perguntas em escala de 1 a 5.
@@ -48,7 +55,7 @@ MECA App - Resumo tecnico da pagina/aplicacao
 - O usuario pode:
   - escolher qual diagnostico visualizar
   - comparar com outro diagnostico do proprio historico
-  - exportar PDF
+  - exportar PDF (admin/MFA conforme rota)
   - sair da sessao
 
 7) Regras de negocio atuais
@@ -62,10 +69,9 @@ MECA App - Resumo tecnico da pagina/aplicacao
 - access_grants: controla permissao de acesso e possibilidade de refazer diagnostico.
 
 9) Pontos para discutir com o engenheiro de aplicacoes
-- Se o bypass por service role para todos os e-mails deve ficar ativo em producao.
-- Qual politica de seguranca sera adotada para autenticacao sem depender de e-mail.
-- Como sera feita a observabilidade de login, callback, score e dashboard.
-- Se o modelo de grants atual esta adequado para a operacao do produto.
+- Politica de TRUST_PROXY e observabilidade de rate limit em producao.
+- Superficie LLM (premium) e custos/guardrails adicionais.
+- Deliverability (Resend/domínio FROM) e URLs de redirect no Supabase.
 
 10) Estado atual
 - Login funcional.
@@ -73,3 +79,14 @@ MECA App - Resumo tecnico da pagina/aplicacao
 - Historico de diagnosticos visivel.
 - Comparacao entre diagnosticos implementada.
 - Controle de acesso por sessao e grant implementado.
+
+11) Relatório PDF (atualização 21 abr 2026)
+- Geração HTML/PDF para admin via GET /api/report/generate (requireAdminWithMfa).
+- Layout premium: capa, hero do arquétipo, gráfico do quadrante MECA,
+  sumário executivo em 3 blocos (Momento/Risco/Alavanca), barras por pilar,
+  gráfico radar SVG dos 4 pilares (Mentalidade/Engajamento/Cultura/Performance),
+  banner de identidade do arquétipo, plano de ação em checklist, teorias ao final.
+- Motor de paginação block-based: cada secção usa break-before:page, blocos atómicos
+  com break-inside:avoid, títulos com break-after:avoid-page. Corrige truncagem
+  silenciosa que existia com overflow:hidden + min-height em .page.
+- Detalhe em docs/RELATORIO_ENGENHARIA_SOFTWARE.md §7.6.

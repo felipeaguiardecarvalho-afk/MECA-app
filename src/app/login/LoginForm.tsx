@@ -1,5 +1,6 @@
 "use client";
 
+import { recoverSessionFromImplicitHash } from "@/lib/auth/implicit-session-from-hash";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,17 +32,51 @@ function callbackErrorMessage(
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/assessment";
+  const next = searchParams.get("next") || "/dashboard";
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<
     "idle" | "sending" | "sent" | "error"
   >("idle");
   const [message, setMessage] = useState<string | null>(null);
+  /** null = a carregar; só mostramos o aviso âmbar em dev se o servidor disser que não há SMTP. */
+  const [outboundEmailConfigured, setOutboundEmailConfigured] = useState<
+    boolean | null
+  >(null);
 
   const authError = searchParams.get("error");
   const authDetail = searchParams.get("detail");
 
+  /**
+   * Supabase redirect with implicit tokens in `#access_token=...` (Site URL → /login).
+   * Server callback never sees the hash; PKCE client ignores it unless we setSession here.
+   */
   useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    if (typeof window === "undefined") return;
+    if (!window.location.hash?.includes("access_token")) return;
+
+    const supabase = createClient();
+    void (async () => {
+      const result = await recoverSessionFromImplicitHash(supabase);
+      if (!result.ok) {
+        setStatus("error");
+        setMessage(
+          "Não foi possível concluir o login a partir do link. Peça um novo link.",
+        );
+        return;
+      }
+      const dest = next.startsWith("/") ? next : `/${next}`;
+      router.replace(dest);
+    })();
+  }, [next, router]);
+
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.location.hash?.includes("access_token")
+    ) {
+      return;
+    }
     const text = callbackErrorMessage(authError, authDetail);
     if (text) {
       setStatus("error");
@@ -61,6 +96,16 @@ export function LoginForm() {
     });
   }, [next, router]);
 
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development" || !isSupabaseConfigured()) return;
+    void fetch("/api/auth/email-outbound")
+      .then((r) => r.json() as Promise<{ outboundConfigured?: boolean }>)
+      .then((d) =>
+        setOutboundEmailConfigured(Boolean(d?.outboundConfigured)),
+      )
+      .catch(() => setOutboundEmailConfigured(false));
+  }, []);
+
   async function onSubmitEmail(e: React.FormEvent) {
     e.preventDefault();
     if (!isSupabaseConfigured()) {
@@ -75,73 +120,44 @@ export function LoginForm() {
 
     const emailTrim = email.trim();
 
+    /**
+     * Só o servidor envia o e-mail (generateLink + Gmail/Resend). Não usar
+     * signInWithOtp aqui — o SMTP do projeto Supabase costuma estar vazio e
+     * devolve erro enganador quando o utilizador já configurou Gmail na app.
+     */
     try {
-      const magicRes = await fetch("/api/auth/magic-link", {
+      const apiRes = await fetch("/api/auth/magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailTrim, next }),
       });
-      const ct = magicRes.headers.get("content-type") ?? "";
-      const raw = await magicRes.text();
-      const looksJson =
-        ct.includes("application/json") || raw.trimStart().startsWith("{");
-      if (looksJson && raw) {
-        type MasterJson = {
-          bypass?: boolean;
-          hashed_token?: string;
-          next?: string;
-          detail?: string;
-          error?: string;
-        };
-        let masterJson: MasterJson = {};
-        try {
-          masterJson = JSON.parse(raw) as MasterJson;
-        } catch {
-          masterJson = {};
-        }
-        if (masterJson.bypass === true && masterJson.hashed_token) {
-          const supabase = createClient();
-          const { error: verifyErr } = await supabase.auth.verifyOtp({
-            token_hash: masterJson.hashed_token,
-            type: "magiclink",
-          });
-          if (verifyErr) {
-            setStatus("error");
-            setMessage(verifyErr.message);
-            return;
-          }
-          const dest = masterJson.next ?? "/assessment";
-          router.push(dest.startsWith("/") ? dest : `/${dest}`);
-          router.refresh();
-          return;
-        }
+
+      if (apiRes.status === 429) {
+        setStatus("error");
+        setMessage(
+          "Muitos pedidos de link. Aguarde cerca de um minuto e tente novamente.",
+        );
+        return;
       }
-    } catch {
-      /* continuar */
-    }
 
-    const supabase = createClient();
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
-    const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+      if (apiRes.ok) {
+        setStatus("sent");
+        setMessage(
+          "Se existir uma conta com este e-mail, receberá um link para entrar em instantes. Verifique a caixa de entrada e o spam.",
+        );
+        return;
+      }
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: emailTrim,
-      options: {
-        emailRedirectTo,
-        shouldCreateUser: true,
-      },
-    });
-    if (error) {
       setStatus("error");
-      setMessage(error.message);
-      return;
+      setMessage(
+        "O servidor não concluiu o pedido. Confirme SUPABASE_SERVICE_ROLE_KEY no .env.local e envio por Gmail (GMAIL_USER + GMAIL_APP_PASSWORD) ou Resend (RESEND_API_KEY). Reinicie o servidor após alterar as variáveis.",
+      );
+    } catch {
+      setStatus("error");
+      setMessage(
+        "Erro de rede. Verifique a sua ligação e tente novamente.",
+      );
     }
-
-    setStatus("sent");
-    setMessage(
-      "Enviámos um link para o seu e-mail. Abra o link para entrar. Após concluir o diagnóstico, o acesso fica restrito ao dashboard.",
-    );
   }
 
   return (
@@ -167,6 +183,33 @@ export function LoginForm() {
                 .env.local
               </code>{" "}
               e reinicie o servidor de desenvolvimento.
+            </p>
+          )}
+
+          {process.env.NODE_ENV === "development" &&
+            isSupabaseConfigured() &&
+            outboundEmailConfigured === false && (
+            <p className="mt-6 rounded-xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-left text-xs leading-relaxed text-amber-950">
+              <strong className="font-semibold">Desenvolvimento local:</strong> o
+              link mágico só chega ao e-mail se configurar envio em{" "}
+              <code className="rounded bg-amber-100/80 px-1 py-0.5 font-mono text-[11px]">
+                .env.local
+              </code>
+              :{" "}
+              <code className="font-mono text-[11px]">RESEND_API_KEY</code>{" "}
+              (Resend) ou{" "}
+              <code className="font-mono text-[11px]">GMAIL_USER</code> +{" "}
+              <code className="font-mono text-[11px]">
+                GMAIL_APP_PASSWORD
+              </code>
+              . Sem isso, o pedido parece aceite mas a mensagem{" "}
+              <span className="font-medium">não é enviada</span> — veja o
+              terminal do <code className="font-mono text-[11px]">npm run dev</code>{" "}
+              (mensagem{" "}
+              <code className="font-mono text-[11px]">
+                [magic-link] DEV fallback
+              </code>
+              ).
             </p>
           )}
 

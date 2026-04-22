@@ -1,0 +1,41 @@
+RELATORIO — Auditoria de seguranca (MECA App)
+=============================================
+
+Atualizado: 22 de abril de 2026
+
+Versao canonica:
+  docs/RELATORIO_AUDITORIA_SEGURANCA.md
+
+Estado (revisao 20 abr 2026):
+  Bloqueadores CRITICOS da secao 5 corrigidos (MFA admin em history/benchmark,
+  PDF/Puppeteer, TLS SMTP, rate limit premium por utilizador + global).
+  Endurecimento extra: assertProductionEnv bloqueia DEV_ANONYMOUS_USER_ID,
+  E2E_INSTANT_DIAGNOSTIC e flags de bypass; isAuthDisabled() em producao
+  chama assertProductionAuthConfig (fail-fast); TRUST_PROXY para IP em
+  rate limit; login-intent com corpo neutro e logs mascarados; logger com PII redigida.
+
+Atualizacao 22 abr 2026:
+  Fluxo principal sem codigo de organizacao obrigatorio; diagnostico unico via
+  access_grants.can_take_diagnostic + gate /assessment; mutacoes grant pos-score
+  com service role onde RLS nao permite INSERT ao cliente.
+
+Atualizacao 21 abr 2026:
+  Redesign visual e refactor do motor de paginacao do relatorio PDF
+  (src/app/api/report/generate/route.ts). Mudanca e cosmetica + paginacao;
+  NAO altera superficie de seguranca:
+    - requireAdminWithMfa mantido em GET /api/report/generate
+    - sanitize-html aplicado ao HTML renderizado
+    - Puppeteer continua com rede bloqueada (so data: / about:)
+    - Chart local em public/vendor, sem download externo
+    - Sem --no-sandbox em producao
+
+Riscos residuais (ver .md secoes 6-8):
+- operacao de TRUST_PROXY / proxies
+- superficie LLM (Claude) / prompt injection
+- Resend/FROM e deliverability
+
+Controles ja presentes:
+- magic link server-side; action_link nunca no JSON; redirectTo com getSiteOrigin
+- assertProductionEnv no boot (TLS global, flags proibidas); headers em next.config.ts
+- rate limit em varias rotas; premium IA com limites e teto global
+- requireAdminWithMfa em report/generate, /api/admin/*, ramos admin de history e benchmark

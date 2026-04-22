@@ -1,74 +1,150 @@
-/**
- * CRITICAL FILE — DO NOT MODIFY STRUCTURE
- * Breaking this file will destroy the UI
- */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --foreground: #111827;
-  --background: #ffffff;
+  --foreground: #0f172a;
+  --background: #fafbff;
+  --meca-navy: #1a3a5c;
+  --meca-blue: #4a90d9;
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --shadow-premium: 0 24px 48px -12px rgba(15, 23, 42, 0.12);
+  --shadow-premium-lg: 0 32px 64px -16px rgba(30, 58, 138, 0.18);
 }
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+  overflow-x: hidden;
+  min-width: 0;
 }
 
-/* Design system — premium SaaS (Stripe / Linear / Notion) */
+/* Design system — premium SaaS (Stripe / Linear / Vercel / Notion) */
 @layer components {
+  /**
+   * App column — centrado; em viewports largos alarga até ~105rem e reduz px
+   * (~70% menos gutter lateral vs. o antigo max-w-6xl + lg:px-8).
+   */
+  .container-meca {
+    @apply mx-auto w-full min-w-0 max-w-6xl px-4 sm:px-6;
+    @apply lg:max-w-[min(100%,105rem)] lg:px-2.5;
+  }
+
+  /**
+   * Prose width — grows with viewport (up to .container-meca), centered.
+   * Use on landing/marketing blocks so copy uses wide screens without a narrow left column.
+   */
+  .text-container {
+    @apply mx-auto w-full min-w-0 max-w-3xl sm:max-w-4xl lg:max-w-5xl xl:max-w-6xl;
+  }
+
+  /** Full-width section vertical rhythm — extra air on large screens (SaaS standard). */
+  .section-meca {
+    @apply w-full min-w-0 py-10 sm:py-16 lg:py-24;
+  }
+
+  /** Full-width page block: horizontal padding + same vertical rhythm as sections. */
   .ds-page {
-    @apply mx-auto max-w-4xl px-6 py-20;
+    @apply w-full min-w-0 px-4 py-10 sm:py-16 lg:py-24;
   }
 
+  /** Centered narrow column (forms, focused flows). */
   .ds-page-narrow {
-    @apply mx-auto max-w-3xl px-6 py-20;
+    @apply mx-auto w-full min-w-0 max-w-3xl px-4 py-10 sm:py-16 lg:py-24;
   }
 
-  .ds-landing-section {
-    @apply mx-auto max-w-3xl space-y-16 px-6 py-20;
+  /** Responsive card grids — 1 col mobile → 2 tablet → 3 desktop. */
+  .grid-meca-cards {
+    @apply grid grid-cols-1 gap-5 sm:gap-7 md:grid-cols-2 lg:grid-cols-3 lg:gap-8;
   }
 
   .ds-heading-xl {
-    @apply text-4xl font-semibold tracking-tight text-gray-900 md:text-5xl;
+    @apply text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl;
   }
 
   .ds-heading {
-    @apply text-2xl font-semibold text-gray-900;
+    @apply text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl;
   }
 
   .ds-body {
-    @apply text-base text-gray-600;
+    @apply text-base leading-relaxed text-slate-600 sm:text-lg;
   }
 
   .ds-small {
-    @apply text-sm text-gray-500;
+    @apply text-sm text-slate-500;
   }
 
+  /** Primary CTA — gradient, depth, subtle motion */
   .ds-btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-900;
+    @apply inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/30 active:scale-[0.99] sm:px-7 sm:py-3.5 sm:text-base;
   }
 
   .ds-btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:border-gray-400 hover:bg-gray-50;
+    @apply inline-flex items-center justify-center rounded-2xl border border-slate-200/90 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-slate-300 hover:bg-white hover:shadow-md active:scale-[0.99] sm:px-7 sm:py-3.5 sm:text-base;
   }
 
+  /** Base card — glass, border, lift on hover */
   .ds-card {
-    @apply rounded-2xl bg-white p-6 shadow-sm;
+    @apply rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-md backdrop-blur-md transition-all duration-300 hover:border-slate-300/90 hover:shadow-xl;
+  }
+
+  /** Pair with .ds-card — extra lift for clickable / hoverable surfaces */
+  .ds-card-interactive {
+    @apply cursor-default transition-transform duration-300 hover:-translate-y-0.5;
   }
 
   .ds-input {
-    @apply mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:border-gray-900 focus:ring-1 focus:ring-gray-900;
+    @apply mt-2 w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-base text-slate-900 shadow-sm outline-none backdrop-blur-sm transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20;
+  }
+
+  /** Hero mesh — use on landing / marketing heroes */
+  .ds-hero-mesh {
+    @apply relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-indigo-50/50;
+  }
+
+  .ds-hero-mesh::before {
+    content: "";
+    @apply pointer-events-none absolute inset-0 opacity-90;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.22), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(59, 130, 246, 0.12), transparent),
+      radial-gradient(ellipse 50% 30% at 0% 20%, rgba(129, 140, 248, 0.1), transparent);
+  }
+
+  .ds-hero-glow-title {
+    text-shadow:
+      0 0 40px rgba(99, 102, 241, 0.25),
+      0 0 80px rgba(59, 130, 246, 0.12);
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(226, 232, 240, 0.35) 0%,
+      rgba(248, 250, 252, 0.9) 50%,
+      rgba(226, 232, 240, 0.35) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

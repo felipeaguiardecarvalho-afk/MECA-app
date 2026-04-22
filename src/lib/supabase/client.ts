@@ -18,5 +18,11 @@ export function createClient(): SupabaseClient {
   if (!url || !key) {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
   }
-  return createBrowserClient(url, key);
+  return createBrowserClient(url, key, {
+    auth: {
+      // Force PKCE in the browser client so email/OAuth callbacks use `code`
+      // exchange instead of implicit hash tokens.
+      flowType: "pkce",
+    },
+  });
 }

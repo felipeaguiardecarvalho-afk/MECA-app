@@ -1,10 +1,12 @@
+"use client";
+
 /* eslint-disable @typescript-eslint/no-explicit-any -- tipos do tick/tooltip do Recharts */
-import React from 'react';
+import React, { useId } from 'react';
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
   PolarRadiusAxis, ResponsiveContainer, Tooltip,
 } from 'recharts';
-import { MECAScores, PILAR_COLORS } from '../../utils/archetypeEngine';
+import { type MECAScores, PILAR_COLORS } from '@/lib/archetypes';
 
 interface Props { scores: MECAScores; }
 
@@ -46,6 +48,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export const MECARadarChart: React.FC<Props> = ({ scores }) => {
+  const gradId = useId().replace(/:/g, "");
   const radarData = [
     { pilar: PILAR_LABELS.M, value: scores.M, fullMark: 100 },
     { pilar: PILAR_LABELS.E, value: scores.E, fullMark: 100 },
@@ -55,24 +58,33 @@ export const MECARadarChart: React.FC<Props> = ({ scores }) => {
   const pillars: Array<keyof MECAScores> = ['M', 'E', 'C', 'A'];
 
   return (
-    <div style={{ width: '100%' }}>
+    <div className="w-full min-w-0 overflow-hidden">
       <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1a3a5c', marginBottom: 4 }}>
         Seus 4 Pilares MECA
       </h2>
       <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 24 }}>
         Baseado em 60 perguntas · 20 teorias científicas
       </p>
-      <ResponsiveContainer width="100%" height={280}>
-        <RadarChart data={radarData} outerRadius={90}>
+      <div className="h-[440px] w-full min-w-0 sm:h-[560px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart data={radarData} outerRadius="55%" margin={{ top: 28, right: 48, bottom: 28, left: 48 }}>
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6366f1" stopOpacity={0.42} />
+              <stop offset="55%" stopColor="#3b82f6" stopOpacity={0.22} />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.08} />
+            </linearGradient>
+          </defs>
           <PolarGrid stroke="#e2e8f0" strokeWidth={1} />
           <PolarAngleAxis dataKey="pilar" tick={<CustomLabel />} tickLine={false} />
           <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickCount={5} />
-          <Radar name="MECA" dataKey="value" stroke="#1a3a5c" strokeWidth={2}
-            fill="#4a90d9" fillOpacity={0.25}
-            dot={{ fill: '#1a3a5c', r: 4, strokeWidth: 2, stroke: '#fff' }} />
+          <Radar name="MECA" dataKey="value" stroke="#1e3a8a" strokeWidth={2.5}
+            fill={`url(#${gradId})`} fillOpacity={1}
+            dot={{ fill: '#1e40af', r: 5, strokeWidth: 2, stroke: '#fff' }} />
           <Tooltip content={<CustomTooltip />} />
         </RadarChart>
       </ResponsiveContainer>
+      </div>
       <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {pillars.map((key) => (
           <div key={key}>

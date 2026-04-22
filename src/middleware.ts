@@ -1,26 +1,61 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ensureEmailAccessGrantIfNeeded } from "@/lib/auth/ensure-email-access";
-import { sanitizeNextParam } from "@/lib/auth/post-login-redirect";
-import { isAuthDisabled } from "@/lib/auth-mode";
+import { assertProductionAuthConfig, isAuthDisabled } from "@/lib/auth-mode";
+import { buildCsp, generateNonce } from "@/lib/security/csp";
+import { CANONICAL_SITE_HOST } from "@/lib/site-domain";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /** Rotas que exigem sessão (sem sessão → /login?next=...) */
-const REQUIRES_SESSION = [
-  "/assessment",
-  "/dashboard",
-  "/plano-de-acao",
-  "/access-code",
-];
-
-/** Rotas que exigem access_grants (além de sessão), exceto /access-code (só precisa de login). */
-const REQUIRES_GRANT = ["/assessment", "/dashboard", "/plano-de-acao"];
+const REQUIRES_SESSION = ["/assessment", "/dashboard", "/plano-de-acao"];
 
 function matchesPrefix(path: string, prefixes: string[]): boolean {
   return prefixes.some((p) => path === p || path.startsWith(`${p}/`));
 }
 
+/**
+ * Per-request Content-Security-Policy with a fresh nonce for `<style>` and
+ * `<script>` elements. The nonce is forwarded to downstream Server Components
+ * via the `x-nonce` request header (Next.js auto-attaches it to its own
+ * framework `<script>` tags when it sees a matching nonce in the CSP header).
+ *
+ * CSP is emitted from middleware instead of `next.config.ts` headers because
+ * the nonce has to change on every request — a static header cannot do that.
+ */
 export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
+  const nonce = generateNonce();
+  // Mutable in middleware runtime; propagates to every `NextResponse.next({ request })`
+  // constructed downstream (including inside `updateSession`) so RSC can read it via
+  // `headers().get('x-nonce')`.
+  request.headers.set("x-nonce", nonce);
+
+  const response = await routeMiddleware(request);
+  response.headers.set("content-security-policy", buildCsp(nonce));
+  // Small debug aid: lets the browser's SSR/hydration code read the nonce out
+  // of the response headers if ever needed without re-parsing CSP. Not a secret.
+  response.headers.set("x-nonce", nonce);
+  return response;
+}
+
+function normalizePathname(pathname: string): string {
+  if (pathname !== "/" && pathname.endsWith("/")) {
+    return pathname.slice(0, -1);
+  }
+  return pathname;
+}
+
+async function routeMiddleware(request: NextRequest): Promise<NextResponse> {
+  assertProductionAuthConfig();
+
+  /** Produção: www → apex (SEO + cookies num único host). Ignora localhost e *.vercel.app. */
+  const host = request.headers.get("host")?.split(":")[0]?.toLowerCase() ?? "";
+  if (host === `www.${CANONICAL_SITE_HOST}`) {
+    const u = request.nextUrl.clone();
+    u.hostname = CANONICAL_SITE_HOST;
+    u.protocol = "https:";
+    return NextResponse.redirect(u, 308);
+  }
+
+  /** Alinha com o router da app (`/login` e `/login/` → mesmo segmento). */
+  const path = normalizePathname(request.nextUrl.pathname);
 
   if (isAuthDisabled()) {
     const { response } = await updateSession(request);
@@ -28,12 +63,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (path === "/access" || path.startsWith("/access/")) {
-    const u = request.nextUrl.clone();
-    u.pathname =
-      path === "/access"
-        ? "/access-code"
-        : `/access-code${path.slice("/access".length)}`;
-    return NextResponse.redirect(u);
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   if (path === "/results" || path.startsWith("/results/")) {
@@ -60,8 +90,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  const { response: supabaseResponse, supabase, user } =
-    await updateSession(request);
+  const { response: supabaseResponse, user } = await updateSession(request);
 
   /** APIs respondem com JSON (401); nunca redirecionar para HTML /login */
   if (path.startsWith("/api/")) {
@@ -69,11 +98,15 @@ export async function middleware(request: NextRequest) {
   }
 
   /**
-   * Páginas públicas: landing, login, callback de sessão, assets de rota.
-   * Sem redirecionamento forçado para /login.
+   * Páginas públicas: landing, fundamentos, arquétipos, login, callback de sessão, assets de rota.
+   * Sem redirecionamento forçado para /login nem exigência de access grant.
    */
   if (
     path === "/" ||
+    path === "/fundamentos" ||
+    path.startsWith("/fundamentos/") ||
+    path === "/arquetipos" ||
+    path.startsWith("/arquetipos/") ||
     path === "/login" ||
     path === "/icon" ||
     path === "/robots.txt" ||
@@ -90,66 +123,6 @@ export async function middleware(request: NextRequest) {
     const returnTo = `${path}${request.nextUrl.search}`;
     login.searchParams.set("next", returnTo);
     return NextResponse.redirect(login);
-  }
-
-  const needsGrant = matchesPrefix(path, REQUIRES_GRANT);
-
-  if (user && needsGrant && supabase) {
-    let { data: grant } = await supabase
-      .from("access_grants")
-      .select("user_id, can_take_diagnostic")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (!grant) {
-      await ensureEmailAccessGrantIfNeeded(supabase, user.id);
-      ({ data: grant } = await supabase
-        .from("access_grants")
-        .select("user_id, can_take_diagnostic")
-        .eq("user_id", user.id)
-        .maybeSingle());
-    }
-
-    if (!grant) {
-      const access = new URL("/access-code", request.url);
-      access.searchParams.set("next", `${path}${request.nextUrl.search}`);
-      return NextResponse.redirect(access);
-    }
-
-    const isAssessment =
-      path === "/assessment" || path.startsWith("/assessment/");
-    if (isAssessment && grant.can_take_diagnostic !== true) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-  }
-
-  /**
-   * Sessão ativa em /access-code: criar grant por e-mail (RPC) e sair desta página.
-   * Evita pedir "código MECA" a quem só usa login por e-mail.
-   */
-  if (
-    user &&
-    supabase &&
-    (path === "/access-code" || path.startsWith("/access-code/"))
-  ) {
-    await ensureEmailAccessGrantIfNeeded(supabase, user.id);
-    const { data: grant } = await supabase
-      .from("access_grants")
-      .select("user_id, can_take_diagnostic")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (grant) {
-      if (grant.can_take_diagnostic === true) {
-        const rawNext = request.nextUrl.searchParams.get("next");
-        let dest = sanitizeNextParam(rawNext);
-        if (dest === "/access-code" || dest.startsWith("/access-code")) {
-          dest = "/assessment";
-        }
-        return NextResponse.redirect(new URL(dest, request.url));
-      }
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
   }
 
   return supabaseResponse;

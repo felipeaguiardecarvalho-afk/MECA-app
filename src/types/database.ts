@@ -70,6 +70,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      admin_audit_logs: {
+        Row: {
+          id: string;
+          action: string;
+          admin_user_id: string;
+          admin_email: string;
+          target_user_id: string | null;
+          target_user_email: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          action: string;
+          admin_user_id: string;
+          admin_email: string;
+          target_user_id?: string | null;
+          target_user_email?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          action?: string;
+          admin_user_id?: string;
+          admin_email?: string;
+          target_user_id?: string | null;
+          target_user_email?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       responses: {
         Row: {
           id: string;
@@ -120,10 +153,6 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      ensure_email_access_grant: {
-        Args: Record<string, never>;
-        Returns: undefined;
-      };
       meca_email_login_phase: {
         Args: { p_email: string };
         Returns: string;

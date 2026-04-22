@@ -1,5 +1,7 @@
 import { isAuthDisabled } from "@/lib/auth-mode";
-import { isAdmin } from "@/lib/auth/isAdmin";
+import { requireAdminWithMfa } from "@/lib/auth/require-admin-mfa";
+import { logAdminAction } from "@/lib/admin-audit-log";
+import { logger } from "@/lib/logger";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { DiagnosticOverviewRow } from "@/types/admin-diagnostic";
@@ -9,6 +11,7 @@ import { NextResponse } from "next/server";
  * Master admin: list access_grants with emails and response counts.
  */
 export async function GET() {
+  try {
   if (isAuthDisabled()) {
     return NextResponse.json(
       { ok: false, error: "admin_overview_disabled_in_dev_auth_off" },
@@ -16,16 +19,31 @@ export async function GET() {
     );
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.email || !isAdmin(user.email)) {
-    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
+  let supabase;
+  try {
+    supabase = await createClient();
+  } catch (err) {
+    logger.error("[api/admin/diagnostic-overview] Supabase client", err);
+    return NextResponse.json(
+      { ok: false, error: "supabase_env_missing" },
+      { status: 503 },
+    );
   }
 
-  const service = createServiceRoleClient();
+  const guard = await requireAdminWithMfa(supabase);
+  if (!guard.ok) return guard.response;
+  const { user } = guard;
+
+  let service;
+  try {
+    service = createServiceRoleClient();
+  } catch (err) {
+    logger.error("[api/admin/diagnostic-overview] service role client", err);
+    return NextResponse.json(
+      { ok: false, error: "service_client_config_invalid" },
+      { status: 503 },
+    );
+  }
   if (!service) {
     return NextResponse.json(
       {
@@ -98,5 +116,19 @@ export async function GET() {
     response_count: countByUser.get(g.user_id as string) ?? 0,
   }));
 
+  await logAdminAction({
+    action: "diagnostic_overview",
+    adminUserId: user.id,
+    adminEmail: user.email ?? null,
+    metadata: { row_count: rows.length },
+  });
+
   return NextResponse.json({ ok: true, rows });
+  } catch (err) {
+    logger.error("[api/admin/diagnostic-overview] GET", err);
+    return NextResponse.json(
+      { ok: false, error: "internal_error" },
+      { status: 500 },
+    );
+  }
 }

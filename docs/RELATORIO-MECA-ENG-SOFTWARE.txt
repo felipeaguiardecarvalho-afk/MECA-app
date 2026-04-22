@@ -1,0 +1,12 @@
+Alias:
+  ver docs/RELATORIO_ENGENHARIA_SOFTWARE.md
+
+Atualizado: 22 de abril de 2026
+
+Espelho: docs/RELATORIO_ENGENHARIA_SOFTWARE.md (Vitest 216 testes / 22 ficheiros;
+  seguranca operacional e logging — ver tambem RELATORIO_AUDITORIA_SEGURANCA.md).
+
+Nota 21 abr 2026: novo §7.6 documenta o motor de paginacao block-based do
+  relatorio PDF (break-before:page por secao, break-inside:avoid nos blocos
+  atomicos, break-after:avoid-page nos titulos); §2 da tabela de rotas descreve
+  o novo layout premium (capa, hero, radar SVG, quadrante, checklist).

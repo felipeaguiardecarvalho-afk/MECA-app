@@ -1,0 +1,30 @@
+Pacote consolidado — entrega engenharia (MECA App)
+==================================================
+
+Atualizado: 22 de abril de 2026
+
+Fonte canônica:
+  docs/RELATORIO_ENTREGA_CONSOLIDADO_ENGENHARIA.md
+
+Leitura recomendada:
+  1) docs/RELATORIO_SITUACAO_ATUAL.md
+  2) docs/RELATORIO_ENGENHARIA_SOFTWARE.md
+  3) docs/RELATORIO_AUDITORIA_SEGURANCA.md
+
+Segurança (20 abr 2026):
+  Críticos da auditoria tratados; endurecimento extra (env, dev flags, IP/TRUST_PROXY,
+  login-intent neutro, logs, limite global IA). Riscos residuais: ver
+  RELATORIO_AUDITORIA_SEGURANCA.md §6–8.
+
+Atualização 21 abr 2026:
+  Relatório PDF (GET /api/report/generate) redesenhado (capa, hero, radar SVG,
+  gráfico do quadrante, checklist do plano de ação, teorias reposicionadas) e com
+  novo motor de paginação block-based. Sem alteração de superfície de segurança.
+  Ver RELATORIO_ENGENHARIA_SOFTWARE.md §7.6.
+
+Atualização 22 abr 2026:
+  Onboarding (/onboarding, POST /api/user/profile); gate /assessment para diagnóstico
+  único; grant SELF via service role após score; fluxo principal sem código de organização.
+
+Observação:
+  Este .txt é resumo de navegação. A revisão técnica deve usar os arquivos .md.

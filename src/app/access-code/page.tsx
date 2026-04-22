@@ -1,14 +1,6 @@
-import { Suspense } from "react";
-import { AccessForm } from "./AccessForm";
+import { redirect } from "next/navigation";
 
+/** Códigos de organização desativados — o acesso é por conta (e-mail / magic link). */
 export default function AccessCodePage() {
-  return (
-    <Suspense
-      fallback={
-        <p className="py-24 text-center text-lg text-gray-500">A carregar…</p>
-      }
-    >
-      <AccessForm />
-    </Suspense>
-  );
+  redirect("/dashboard");
 }

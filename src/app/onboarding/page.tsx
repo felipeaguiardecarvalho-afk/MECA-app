@@ -41,8 +41,13 @@ export default async function OnboardingPage({
     .eq("id", user.id)
     .maybeSingle();
 
+  const metadataName =
+    typeof user.user_metadata?.full_name === "string"
+      ? user.user_metadata.full_name
+      : "";
   const hasName =
-    typeof profile?.full_name === "string" && profile.full_name.trim().length > 0;
+    (typeof profile?.full_name === "string" && profile.full_name.trim().length > 0) ||
+    metadataName.trim().length > 0;
 
   if (hasName) {
     redirect(next);
@@ -52,7 +57,7 @@ export default async function OnboardingPage({
     <OnboardingForm
       next={next}
       defaults={{
-        name: profile?.full_name ?? "",
+        name: profile?.full_name ?? metadataName ?? "",
         profession: profile?.profession ?? "",
         phone: profile?.phone ?? "",
       }}

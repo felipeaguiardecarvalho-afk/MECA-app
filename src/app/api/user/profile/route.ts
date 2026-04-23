@@ -91,7 +91,8 @@ export async function POST(request: Request) {
 
   // Prefer service-role write (server-only) to avoid RLS drift between
   // environments; we still scope the write to the authenticated `user.id`.
-  const writer = createServiceRoleClient() ?? supabase;
+  const service = createServiceRoleClient();
+  const writer = service ?? supabase;
 
   const basePayload = {
     id: user.id,
@@ -117,6 +118,32 @@ export async function POST(request: Request) {
   }
 
   if (error) {
+    // Last-resort fallback: persist onboarding fields on auth metadata so the
+    // user can still progress even if `public.profiles` is misconfigured.
+    if (service) {
+      const { error: metaError } = await service.auth.admin.updateUserById(
+        user.id,
+        {
+          user_metadata: {
+            ...(user.user_metadata ?? {}),
+            full_name: name.trim(),
+            profession: nullIfEmpty(profession),
+            phone: nullIfEmpty(phone),
+          },
+        },
+      );
+      if (!metaError) {
+        console.warn("[onboarding] profiles write failed; saved metadata fallback", {
+          userId: user.id,
+          detail: error.message,
+        });
+        return NextResponse.json({ ok: true, fallback: "auth_metadata" });
+      }
+    }
+    console.error("[onboarding] failed to persist profile", {
+      userId: user.id,
+      detail: error.message,
+    });
     return NextResponse.json(
       { ok: false, error: "db_error", detail: error.message },
       { status: 500 },

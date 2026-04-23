@@ -34,9 +34,14 @@ export default async function AssessmentPage() {
         .eq("id", user.id)
         .maybeSingle();
 
+      const metadataName =
+        typeof user.user_metadata?.full_name === "string"
+          ? user.user_metadata.full_name
+          : "";
       const hasName =
-        typeof profile?.full_name === "string" &&
-        profile.full_name.trim().length > 0;
+        (typeof profile?.full_name === "string" &&
+          profile.full_name.trim().length > 0) ||
+        metadataName.trim().length > 0;
 
       if (!hasName) {
         redirect("/onboarding?next=/assessment");

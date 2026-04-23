@@ -1,5 +1,6 @@
 import { isAuthDisabled } from "@/lib/auth-mode";
 import { jsonRateLimitOrNull } from "@/lib/rate-limit";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -88,15 +89,32 @@ export async function POST(request: Request) {
 
   const { name, profession, phone } = parsed.data;
 
-  const { error } = await supabase
-    .from("profiles")
-    .upsert({
-      id: user.id,
-      full_name: name.trim(),
-      profession: nullIfEmpty(profession),
-      phone: nullIfEmpty(phone),
-      updated_at: new Date().toISOString(),
-    });
+  // Prefer service-role write (server-only) to avoid RLS drift between
+  // environments; we still scope the write to the authenticated `user.id`.
+  const writer = createServiceRoleClient() ?? supabase;
+
+  const basePayload = {
+    id: user.id,
+    full_name: name.trim(),
+  };
+  const fullPayload = {
+    ...basePayload,
+    profession: nullIfEmpty(profession),
+    phone: nullIfEmpty(phone),
+  };
+
+  let { error } = await writer.from("profiles").upsert(fullPayload);
+
+  // Backward compatibility: some environments may not yet have onboarding
+  // columns (`profession` / `phone`). Retry with the minimum schema.
+  if (
+    error &&
+    /column .* (profession|phone) .* does not exist|schema cache/i.test(
+      error.message,
+    )
+  ) {
+    ({ error } = await writer.from("profiles").upsert(basePayload));
+  }
 
   if (error) {
     return NextResponse.json(

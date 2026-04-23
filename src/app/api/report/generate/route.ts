@@ -2089,13 +2089,14 @@ export async function GET(request: NextRequest) {
   const answers: Record<string, number> = row.answers ?? {};
   const theories = getLowestTheories(answers, 4);
 
-  const generatedAt = new Date().toLocaleDateString("pt-BR", {
+  const generatedAt = `${new Date().toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "long",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
+    timeZone: "America/Sao_Paulo",
+  })} BRT`;
 
   const html = buildHtml({ userName, email, scores, generatedAt, theories });
 

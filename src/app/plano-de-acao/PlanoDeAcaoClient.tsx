@@ -21,6 +21,12 @@ export function PlanoDeAcaoClient() {
   const [error, setError] = useState<string | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
 
+  const handleRetakeDiagnostic = useCallback(() => {
+    window.alert(
+      "Apenas um diagnóstico é permitido por cadastro. Caso queira realmente refazer seu diagnóstico, entre em contato com felipe.aguiardecarvalho@gmail.com",
+    );
+  }, []);
+
   const fetchHistory = useCallback(async () => {
     setError(null);
     try {
@@ -210,9 +216,13 @@ export function PlanoDeAcaoClient() {
           <Link href="/dashboard" className="ds-btn-secondary inline-flex flex-1 justify-center sm:flex-none">
             ← Voltar ao dashboard
           </Link>
-          <Link href="/assessment" className="ds-btn-primary inline-flex flex-1 justify-center sm:flex-none">
+          <button
+            type="button"
+            onClick={handleRetakeDiagnostic}
+            className="ds-btn-primary inline-flex flex-1 justify-center sm:flex-none"
+          >
             Refazer diagnóstico
-          </Link>
+          </button>
         </div>
         </div>
       </div>

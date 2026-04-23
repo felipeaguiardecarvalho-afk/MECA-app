@@ -1923,16 +1923,53 @@ function buildHtml(params: {
 // ---------------------------------------------------------------------------
 
 async function renderPdfWithPuppeteer(html: string): Promise<Uint8Array> {
-  const puppeteer = await import("puppeteer");
-  const isProduction = process.env.NODE_ENV === "production";
-  const launchArgs = isProduction
-    ? []
-    : ["--no-sandbox", "--disable-setuid-sandbox"];
+  type InterceptedRequest = {
+    url: () => string;
+    abort: () => Promise<void>;
+    continue: () => Promise<void>;
+  };
+  type PageLike = {
+    setRequestInterception: (enabled: boolean) => Promise<void>;
+    on: (
+      event: "request",
+      cb: (req: InterceptedRequest) => void,
+    ) => void;
+    setContent: (
+      content: string,
+      opts: { waitUntil: "domcontentloaded" },
+    ) => Promise<void>;
+    evaluate: (fn: () => Promise<void>) => Promise<void>;
+    pdf: (opts: {
+      format: "A4";
+      printBackground: boolean;
+      preferCSSPageSize: boolean;
+      margin: { top: string; right: string; bottom: string; left: string };
+    }) => Promise<Uint8Array | Buffer>;
+  };
+  type BrowserLike = {
+    newPage: () => Promise<PageLike>;
+    close: () => Promise<void>;
+  };
 
-  const browser = await puppeteer.default.launch({
-    headless: true,
-    args: launchArgs,
-  });
+  const isVercelRuntime = process.env.VERCEL === "1";
+  let browser: BrowserLike;
+
+  if (isVercelRuntime) {
+    const chromium = await import("@sparticuz/chromium");
+    const puppeteerCore = await import("puppeteer-core");
+    const executablePath = await chromium.default.executablePath();
+    browser = await puppeteerCore.default.launch({
+      executablePath,
+      args: chromium.default.args,
+      headless: true,
+    });
+  } else {
+    const puppeteer = await import("puppeteer");
+    browser = await puppeteer.default.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+  }
 
   const page = await browser.newPage();
   await page.setRequestInterception(true);

@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
+    "@sparticuz/chromium": "^147.0.2",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.1",
     "@types/nodemailer": "^8.0.0",
@@ -35,6 +36,7 @@
     "next": "^15.1.0",
     "nodemailer": "^8.0.5",
     "puppeteer": "^24.41.0",
+    "puppeteer-core": "^24.42.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^3.8.1",

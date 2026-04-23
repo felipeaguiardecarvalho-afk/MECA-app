@@ -49,6 +49,14 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export const MECARadarChart: React.FC<Props> = ({ scores }) => {
   const gradId = useId().replace(/:/g, "");
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   const radarData = [
     { pilar: PILAR_LABELS.M, value: scores.M, fullMark: 100 },
     { pilar: PILAR_LABELS.E, value: scores.E, fullMark: 100 },
@@ -65,9 +73,17 @@ export const MECARadarChart: React.FC<Props> = ({ scores }) => {
       <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 24 }}>
         Baseado em 60 perguntas · 20 teorias científicas
       </p>
-      <div className="h-[440px] w-full min-w-0 sm:h-[560px]">
+      <div className="h-[520px] w-full min-w-0 sm:h-[560px]">
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={radarData} outerRadius="55%" margin={{ top: 28, right: 48, bottom: 28, left: 48 }}>
+        <RadarChart
+          data={radarData}
+          outerRadius={isMobile ? "78%" : "62%"}
+          margin={
+            isMobile
+              ? { top: 12, right: 10, bottom: 12, left: 10 }
+              : { top: 22, right: 34, bottom: 22, left: 34 }
+          }
+        >
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#6366f1" stopOpacity={0.42} />

@@ -149,8 +149,13 @@ describe("position zone (quadrant from xScore/yScore)", () => {
 });
 
 describe("classifyArchetype — 8 rules", () => {
-  it("Rule 1 — all high → Acelerado MECA", () => {
+  it("Rule 1 — all pillars ≥ 60 → Acelerado MECA", () => {
     expect(classifyArchetype(s(80, 80, 80, 80))).toBe("acelerado_meca");
+    expect(classifyArchetype(s(60, 60, 60, 60))).toBe("acelerado_meca");
+  });
+
+  it("Rule 1 — one pillar below 60 does not yield Acelerado MECA", () => {
+    expect(classifyArchetype(s(60, 60, 60, 59))).toBe("protagonista_desalinhado");
   });
 
   it("Rule 2 — high E + low M → Útil Sem Direção", () => {
@@ -197,7 +202,9 @@ describe("classifyArchetype — 8 rules", () => {
   });
 
   it("fallback: mid scores map to the zone's anchor archetype", () => {
-    expect(classifyArchetype(s(55, 55, 55, 55))).toBe("acelerado_meca");
+    expect(classifyArchetype(s(55, 55, 55, 55))).toBe(
+      "protagonista_desalinhado",
+    );
     expect(classifyArchetype(s(45, 45, 45, 45))).toBe("profissional_invisivel");
   });
 });

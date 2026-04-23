@@ -23,7 +23,7 @@
  *   5. Profissional Invisível    → Zona de Invisibilidade
  *   6. Performático Exausto      → Zona de Esforço Invisível
  *   7. Bem-Quisto Estagnado      → Potencial Desperdiçado
- *   8. Acelerado MECA            → Zona de Aceleração
+ *   8. Acelerado MECA            → Zona de Aceleração (só se M,E,C,A ≥ 60)
  *
  * Regra de consistência: `getArchetype()` é a ÚNICA função que classifica.
  * Qualquer override manual é proibido — o motor de relatório, o PDF, o dashboard
@@ -339,6 +339,8 @@ const BAND_LOW = (v: number) => v <= LOW;
  *   8) Profissional Invisível      — baixo E + baixo C
  *
  * Fallback (nenhuma regra aplicável): arquétipo âncora da zona posicional.
+ * Na zona de aceleração (gráfico), se nem todas as regras casarem e min(pilares) < 60,
+ * a âncora é Protagonista Desalinhado — Acelerado MECA só entra pela regra 1.
  * Em empate de desequilíbrios → prioridade acima resolve (dominância por ordem).
  */
 export function classifyArchetype(scores: MECAScores): ArchetypeKey {
@@ -377,7 +379,7 @@ export function classifyArchetype(scores: MECAScores): ArchetypeKey {
   const zone = computePositionZone(xScore, yScore);
   switch (zone) {
     case "aceleracao":
-      return "acelerado_meca";
+      return "protagonista_desalinhado";
     case "potencial_desperdicado":
       return "estrategista_estagnado";
     case "esforco_invisivel":

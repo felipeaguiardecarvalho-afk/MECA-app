@@ -19,11 +19,35 @@ export function AppNav() {
 
   return (
     <header className="sticky top-0 z-50 w-full min-w-0 border-b border-white/40 bg-white/75 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-900/5 backdrop-blur-xl supports-[backdrop-filter]:bg-white/65">
-      <div className="container-meca flex flex-col gap-2 py-2 sm:gap-0 sm:py-0">
-        {/*
-          Grid: [logo][nav centrada][auth] — coluna final fixa para Entrar/Sair.
-        */}
-        <div className="grid min-h-12 w-full min-w-0 grid-cols-[auto_1fr_auto] items-center gap-x-3 sm:min-h-14 sm:gap-x-4">
+      <div className="container-meca py-2 sm:py-0">
+        {/* Mobile portrait/tablet narrow: two rows to avoid overlap */}
+        <div className="flex min-h-12 w-full min-w-0 items-center justify-between gap-x-3 sm:hidden">
+          <div className="flex min-w-0 items-center shrink-0">
+            <Link
+              href="/"
+              className="bg-gradient-to-r from-slate-900 to-indigo-800 bg-clip-text text-[15px] font-bold tracking-tight text-transparent transition-opacity hover:opacity-90"
+            >
+              MECA
+            </Link>
+          </div>
+          <div className="flex min-w-0 items-center justify-end">
+            <AuthNav />
+          </div>
+        </div>
+        <nav
+          className="mt-2 flex min-w-0 items-center justify-center gap-1 rounded-2xl border border-slate-200/60 bg-slate-100/50 p-1 shadow-inner backdrop-blur-sm sm:hidden"
+          aria-label="Seções do MECA"
+        >
+          <Link href="/fundamentos" className={tabClass(onFundamentos)}>
+            Fundamentos
+          </Link>
+          <Link href="/arquetipos" className={tabClass(onArquetipos)}>
+            Arquétipos
+          </Link>
+        </nav>
+
+        {/* Desktop: centered tabs with auth on the right */}
+        <div className="hidden min-h-14 w-full min-w-0 grid-cols-[auto_1fr_auto] items-center gap-x-4 sm:grid">
           <div className="flex min-w-0 items-center">
             <Link
               href="/"
@@ -32,7 +56,6 @@ export function AppNav() {
               MECA
             </Link>
           </div>
-
           <nav
             className="flex min-w-0 items-center justify-self-center gap-1 rounded-2xl border border-slate-200/60 bg-slate-100/50 p-1 shadow-inner backdrop-blur-sm"
             aria-label="Seções do MECA"
@@ -44,8 +67,7 @@ export function AppNav() {
               Arquétipos
             </Link>
           </nav>
-
-          <div className="flex min-w-[7rem] items-center justify-end justify-self-end sm:min-w-0">
+          <div className="flex min-w-[7rem] items-center justify-end justify-self-end">
             <AuthNav />
           </div>
         </div>

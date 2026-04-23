@@ -168,9 +168,12 @@ describe("CSP nonce-based styles", () => {
       "utf8",
     );
     expect(mw).toMatch(/generateNonce\(\)/);
-    expect(mw).toMatch(/request\.headers\.set\(["']x-nonce["'],\s*nonce\)/);
+    expect(mw).toMatch(/requestHeaders\.set\(\s*["']x-nonce["'],\s*nonce\s*\)/);
     expect(mw).toMatch(
-      /response\.headers\.set\(\s*["']content-security-policy["'],\s*buildCsp\(nonce\)\s*\)/,
+      /requestHeaders\.set\(\s*["']content-security-policy["'],\s*csp\s*\)/,
+    );
+    expect(mw).toMatch(
+      /response\.headers\.set\(\s*["']content-security-policy["'],\s*csp\s*\)/,
     );
   });
 });

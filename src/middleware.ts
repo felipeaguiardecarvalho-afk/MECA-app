@@ -28,12 +28,15 @@ function matchesPrefix(path: string, prefixes: string[]): boolean {
  */
 export async function middleware(request: NextRequest) {
   const nonce = generateNonce();
+  const csp = buildCsp(nonce);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
+  // Next.js extrai o nonce do CSP do *pedido* durante o render; só na resposta não basta.
+  requestHeaders.set("content-security-policy", csp);
   const requestForRoutes = new NextRequest(request, { headers: requestHeaders });
 
   const response = await routeMiddleware(requestForRoutes);
-  response.headers.set("content-security-policy", buildCsp(nonce));
+  response.headers.set("content-security-policy", csp);
   // Small debug aid: lets the browser's SSR/hydration code read the nonce out
   // of the response headers if ever needed without re-parsing CSP. Not a secret.
   response.headers.set("x-nonce", nonce);

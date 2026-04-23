@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+
+/** CSP com nonce por pedido — páginas têm de ser dinâmicas (ver guia CSP do Next.js). */
+export const dynamic = "force-dynamic";
 import "./critical-fallback.css";
 import "./globals.css";
 import { AppNav } from "@/components/AppNav";

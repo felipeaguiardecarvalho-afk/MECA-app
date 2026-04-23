@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { assertProductionAuthConfig, isAuthDisabled } from "@/lib/auth-mode";
 import { buildCsp, generateNonce } from "@/lib/security/csp";
 import { CANONICAL_SITE_HOST } from "@/lib/site-domain";
@@ -19,15 +19,20 @@ function matchesPrefix(path: string, prefixes: string[]): boolean {
  *
  * CSP is emitted from middleware instead of `next.config.ts` headers because
  * the nonce has to change on every request — a static header cannot do that.
+ *
+ * Importante: não uses `request.headers.set` no `NextRequest` original — em
+ * muitos runtimes isso não chega ao renderizador RSC. Clona `Headers` e cria
+ * um `NextRequest` novo (padrão Next.js); caso contrário os `<script>` inline
+ * do Flight ficam sem `nonce` e o browser bloqueia-nos → ecrã branco após
+ * hidratação.
  */
 export async function middleware(request: NextRequest) {
   const nonce = generateNonce();
-  // Mutable in middleware runtime; propagates to every `NextResponse.next({ request })`
-  // constructed downstream (including inside `updateSession`) so RSC can read it via
-  // `headers().get('x-nonce')`.
-  request.headers.set("x-nonce", nonce);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  const requestForRoutes = new NextRequest(request, { headers: requestHeaders });
 
-  const response = await routeMiddleware(request);
+  const response = await routeMiddleware(requestForRoutes);
   response.headers.set("content-security-policy", buildCsp(nonce));
   // Small debug aid: lets the browser's SSR/hydration code read the nonce out
   // of the response headers if ever needed without re-parsing CSP. Not a secret.

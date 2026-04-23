@@ -90,13 +90,13 @@ export async function POST(request: Request) {
 
   const { error } = await supabase
     .from("profiles")
-    .update({
+    .upsert({
+      id: user.id,
       full_name: name.trim(),
       profession: nullIfEmpty(profession),
       phone: nullIfEmpty(phone),
       updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+    });
 
   if (error) {
     return NextResponse.json(

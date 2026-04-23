@@ -556,7 +556,7 @@ export const MECADashboard: React.FC = () => {
                 <ArchetypeMatrix archetype={archetype} />
               </div>
             </div>
-            <div className="mx-auto flex min-w-0 w-full max-w-[calc(100vw-12rem)] flex-col gap-6">
+            <div className="mx-auto flex min-w-0 w-full max-w-full flex-col gap-6 sm:max-w-2xl lg:max-w-4xl">
               <div className="flex justify-end">
                 <Link href="/fundamentos" className="ds-btn-secondary inline-flex items-center text-sm">
                   Ver fundamentos

@@ -29,9 +29,16 @@ const ZONE_ORDER: ZoneKey[] = [
 
 export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
   const [animated, setAnimated] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimated(true), 300);
     return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 640);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   const dotX = `${archetype.xScore}%`;
@@ -56,10 +63,10 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
       <div
         style={{
           position: "relative",
-          paddingTop: 36,
-          paddingBottom: 36,
-          paddingLeft: 96,
-          paddingRight: 96,
+          paddingTop: isMobile ? 28 : 36,
+          paddingBottom: isMobile ? 28 : 36,
+          paddingLeft: isMobile ? 12 : 96,
+          paddingRight: isMobile ? 18 : 96,
         }}
       >
         {/* Axis labels — X = Capacidade (horizontal), Y = Direção e Sistema (vertical) */}
@@ -69,7 +76,7 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
             top: 4,
             left: "50%",
             transform: "translateX(-50%)",
-            fontSize: 12,
+            fontSize: isMobile ? 10 : 12,
             fontWeight: 700,
             color: "#1a3a5c",
             whiteSpace: "nowrap",
@@ -77,11 +84,13 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
           }}
         >
           ↑ ALTA DIREÇÃO E SISTEMA
-          <div
-            style={{ fontSize: 10, fontWeight: 500, color: "#6b7280", marginTop: 2 }}
-          >
-            Leitura de contexto · Posicionamento · Engajamento (C+E)
-          </div>
+          {!isMobile ? (
+            <div
+              style={{ fontSize: 10, fontWeight: 500, color: "#6b7280", marginTop: 2 }}
+            >
+              Leitura de contexto · Posicionamento · Engajamento (C+E)
+            </div>
+          ) : null}
         </div>
         <div
           style={{
@@ -89,7 +98,7 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
             bottom: 4,
             left: "50%",
             transform: "translateX(-50%)",
-            fontSize: 12,
+            fontSize: isMobile ? 10 : 12,
             fontWeight: 700,
             color: "#1a3a5c",
             whiteSpace: "nowrap",
@@ -105,11 +114,11 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
             top: "50%",
             transform: "translateY(-50%) rotate(-90deg)",
             transformOrigin: "center",
-            fontSize: 12,
+            fontSize: isMobile ? 10 : 12,
             fontWeight: 700,
             color: "#1a3a5c",
             whiteSpace: "nowrap",
-            width: 180,
+            width: isMobile ? 120 : 180,
             textAlign: "center",
           }}
         >
@@ -118,15 +127,15 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
         <div
           style={{
             position: "absolute",
-            right: -60,
+            right: isMobile ? -30 : -60,
             top: "50%",
             transform: "translateY(-50%) rotate(90deg)",
             transformOrigin: "center",
-            fontSize: 12,
+            fontSize: isMobile ? 10 : 12,
             fontWeight: 700,
             color: "#1a3a5c",
             whiteSpace: "nowrap",
-            width: 180,
+            width: isMobile ? 120 : 180,
             textAlign: "center",
           }}
         >
@@ -185,16 +194,16 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
                   flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "flex-start",
-                  padding: "14px 12px 20px",
+                  padding: isMobile ? "8px 6px 12px" : "14px 12px 20px",
                   opacity: isActive ? 1 : 0.75,
                   transition: "opacity 0.5s ease",
-                  gap: 10,
+                  gap: isMobile ? 6 : 10,
                   textAlign: "center",
                 }}
               >
                 <div
                   style={{
-                    fontSize: 10,
+                    fontSize: isMobile ? 9 : 10,
                     fontWeight: 800,
                     letterSpacing: "0.06em",
                     textTransform: "uppercase",
@@ -209,7 +218,7 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
                     display: "flex",
                     flexWrap: "wrap",
                     justifyContent: "center",
-                    gap: 6,
+                    gap: isMobile ? 4 : 6,
                   }}
                 >
                   {archetypesHere.map((a) => {
@@ -218,11 +227,11 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
                       <span
                         key={a.key}
                         style={{
-                          fontSize: 10.5,
+                          fontSize: isMobile ? 9 : 10.5,
                           fontWeight: isUser ? 800 : 600,
                           color: isUser ? "#ffffff" : zone.textColor,
                           background: isUser ? "#1a3a5c" : "rgba(255,255,255,0.7)",
-                          padding: "4px 8px",
+                          padding: isMobile ? "3px 6px" : "4px 8px",
                           borderRadius: 999,
                           border: isUser
                             ? "1.5px solid #1a3a5c"
@@ -282,13 +291,13 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
             <div
               style={{
                 position: "absolute",
-                left: 28,
-                top: -18,
+                left: isMobile ? 16 : 28,
+                top: isMobile ? -14 : -18,
                 background: "#1a3a5c",
                 color: "#fff",
-                fontSize: 10,
+                fontSize: isMobile ? 9 : 10,
                 fontWeight: 700,
-                padding: "3px 8px",
+                padding: isMobile ? "2px 6px" : "3px 8px",
                 borderRadius: 6,
                 whiteSpace: "nowrap",
                 boxShadow: "0 2px 8px rgba(26,58,92,0.3)",

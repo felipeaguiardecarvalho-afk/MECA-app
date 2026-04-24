@@ -65,7 +65,7 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
           position: "relative",
           paddingTop: isMobile ? 28 : 36,
           paddingBottom: isMobile ? 28 : 36,
-          paddingLeft: isMobile ? 12 : 96,
+          paddingLeft: isMobile ? 20 : 124,
           paddingRight: isMobile ? 18 : 96,
         }}
       >
@@ -110,7 +110,7 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
         <div
           style={{
             position: "absolute",
-            left: 4,
+            left: isMobile ? -2 : -8,
             top: "50%",
             transform: "translateY(-50%) rotate(-90deg)",
             transformOrigin: "center",
@@ -139,7 +139,7 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
             textAlign: "center",
           }}
         >
-          ALTA CAPACIDADE →
+          ← ALTA CAPACIDADE
         </div>
 
         <div
@@ -215,6 +215,8 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
             const zone = ZONES[zoneKey];
             const archetypesHere = archetypesInZone(zoneKey);
             const isActive = archetype.positionZone === zoneKey;
+            const isBottomZone =
+              zoneKey === "invisibilidade" || zoneKey === "esforco_invisivel";
             return (
               <div
                 key={zoneKey}
@@ -224,7 +226,7 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  justifyContent: "flex-start",
+                  justifyContent: isBottomZone ? "flex-end" : "flex-start",
                   padding: isMobile ? "8px 6px 12px" : "14px 12px 20px",
                   opacity: isActive ? 1 : 0.75,
                   transition: "opacity 0.5s ease",
@@ -232,18 +234,6 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
                   textAlign: "center",
                 }}
               >
-                <div
-                  style={{
-                    fontSize: isMobile ? 9 : 10,
-                    fontWeight: 800,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    color: zone.textColor,
-                    opacity: 0.85,
-                  }}
-                >
-                  {zone.label}
-                </div>
                 <div
                   style={{
                     display: "flex",
@@ -275,6 +265,18 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
                       </span>
                     );
                   })}
+                </div>
+                <div
+                  style={{
+                    fontSize: isMobile ? 9 : 10,
+                    fontWeight: 800,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    color: zone.textColor,
+                    opacity: 0.85,
+                  }}
+                >
+                  {zone.label}
                 </div>
               </div>
             );

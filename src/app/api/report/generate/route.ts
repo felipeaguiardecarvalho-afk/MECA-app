@@ -283,6 +283,9 @@ function buildQuadrantGraph(archetype: ArchetypeResult): string {
       <div class="quad-matrix-wrap">
         <div class="quad-matrix">
           ${cells}
+          <div class="quad-neutral-zone">
+            <div class="quad-neutral-zone-label">Zona de Transicao</div>
+          </div>
           <div class="quad-dot" style="left:${dotLeft}%; top:${dotTop}%;">
             <div class="quad-dot-glow"></div>
             <div class="quad-dot-core"></div>
@@ -873,11 +876,35 @@ function buildHtml(params: {
   }
   .quad-chip-icon { font-size: 10px; }
   .quad-chip-label { font-size: 10px; white-space: nowrap; }
+  .quad-neutral-zone {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 20%;
+    height: 20%;
+    transform: translate(-50%, -50%);
+    border: 1.5px dashed #94a3b8;
+    border-radius: 10px;
+    background: rgba(248,250,252,0.82);
+    z-index: 4;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 4px;
+    box-sizing: border-box;
+  }
+  .quad-neutral-zone-label {
+    font-size: 8px;
+    font-weight: 800;
+    color: #475569;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
   .quad-dot {
     position: absolute;
     transform: translate(-50%, -50%);
-    z-index: 5;
+    z-index: 6;
   }
   .quad-dot-glow {
     position: absolute;

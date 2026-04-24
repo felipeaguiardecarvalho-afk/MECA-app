@@ -179,6 +179,37 @@ export const ArchetypeMatrix: React.FC<Props> = ({ archetype }) => {
               transform: "translateY(-50%)",
             }}
           />
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: "20%",
+              height: "20%",
+              transform: "translate(-50%, -50%)",
+              border: "1.5px dashed #94a3b8",
+              borderRadius: 10,
+              background: "rgba(248,250,252,0.82)",
+              zIndex: 3,
+              pointerEvents: "none",
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              paddingTop: isMobile ? 2 : 4,
+            }}
+          >
+            <span
+              style={{
+                fontSize: isMobile ? 7.5 : 8.5,
+                fontWeight: 800,
+                color: "#475569",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Zona de Transicao
+            </span>
+          </div>
 
           {ZONE_ORDER.map((zoneKey) => {
             const zone = ZONES[zoneKey];

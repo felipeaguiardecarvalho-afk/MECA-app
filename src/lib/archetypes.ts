@@ -338,9 +338,9 @@ const BAND_LOW = (v: number) => v <= LOW;
  *   7) Executor Isolado            — alto A + baixo E
  *   8) Profissional Invisível      — baixo E + baixo C
  *
- * Fallback (nenhuma regra aplicável): arquétipo âncora da zona posicional.
- * Na zona de aceleração (gráfico), se nem todas as regras casarem e min(pilares) < 60,
- * a âncora é Protagonista Desalinhado — Acelerado MECA só entra pela regra 1.
+ * Fallback (nenhuma regra aplicável): prioriza pilar mais fraco em zonas cinzas
+ * e usa distância euclidiana para protótipos como segunda camada.
+ * Na zona de aceleração (gráfico), Acelerado MECA só entra pela regra 1.
  * Em empate de desequilíbrios → prioridade acima resolve (dominância por ordem).
  */
 export function classifyArchetype(scores: MECAScores): ArchetypeKey {
@@ -373,26 +373,124 @@ export function classifyArchetype(scores: MECAScores): ArchetypeKey {
 
   if (BAND_LOW(E) && BAND_LOW(C)) return "profissional_invisivel";
 
-  // Fallback: usa a zona posicional para escolher o arquétipo âncora.
-  const xScore = computeCapacityAxis(scores);
-  const yScore = computeDirectionAxis(scores);
-  const zone = computePositionZone(xScore, yScore);
-  switch (zone) {
-    case "aceleracao":
-      return "protagonista_desalinhado";
-    case "potencial_desperdicado":
-      return "estrategista_estagnado";
-    case "esforco_invisivel":
-      return "executor_isolado";
-    case "invisibilidade":
-      return "profissional_invisivel";
-  }
+  // Fallback: nearest-neighbor com guardrails para preservar semântica editorial.
+  return nearestArchetypeByDistance(scores);
 }
 
 function weakestPilar(scores: MECAScores): keyof MECAScores {
   return (Object.keys(scores) as Array<keyof MECAScores>).reduce((a, b) =>
     scores[a] <= scores[b] ? a : b,
   );
+}
+
+const FALLBACK_PROTOTYPES: Record<
+  Exclude<ArchetypeKey, "acelerado_meca">,
+  MECAScores
+> = {
+  util_sem_direcao: { M: 30, E: 80, C: 55, A: 50 },
+  bem_quisto_estagnado: { M: 55, E: 80, C: 80, A: 30 },
+  estrategista_estagnado: { M: 55, E: 55, C: 80, A: 30 },
+  protagonista_desalinhado: { M: 80, E: 65, C: 30, A: 80 },
+  performatico_exausto: { M: 80, E: 30, C: 30, A: 80 },
+  executor_isolado: { M: 55, E: 30, C: 55, A: 80 },
+  profissional_invisivel: { M: 35, E: 30, C: 30, A: 35 },
+};
+
+type FallbackKey = keyof typeof FALLBACK_PROTOTYPES;
+
+function isSemanticallyValidFallback(key: FallbackKey, s: MECAScores): boolean {
+  const high = (v: number) => v >= 55;
+  const low = (v: number) => v <= 55;
+
+  switch (key) {
+    case "util_sem_direcao":
+      return high(s.E) && low(s.M);
+    case "bem_quisto_estagnado":
+      return high(s.E) && high(s.C) && low(s.A);
+    case "estrategista_estagnado":
+      return high(s.C) && low(s.A);
+    case "protagonista_desalinhado":
+      return high(s.M) && high(s.A) && low(s.C);
+    case "performatico_exausto":
+      return high(s.M) && high(s.A) && (low(s.E) || low(s.C));
+    case "executor_isolado":
+      return high(s.A) && low(s.E);
+    case "profissional_invisivel":
+      return low(s.E) && low(s.C);
+  }
+}
+
+function sqDist(a: MECAScores, b: MECAScores): number {
+  const dM = a.M - b.M;
+  const dE = a.E - b.E;
+  const dC = a.C - b.C;
+  const dA = a.A - b.A;
+  return dM * dM + dE * dE + dC * dC + dA * dA;
+}
+
+function nearestArchetypeByDistance(scores: MECAScores): ArchetypeKey {
+  const prioritized = fallbackByWeakestPilar(scores);
+  if (prioritized) return prioritized;
+
+  let best: FallbackKey | null = null;
+  let bestDist = Number.POSITIVE_INFINITY;
+
+  for (const key of Object.keys(FALLBACK_PROTOTYPES) as FallbackKey[]) {
+    if (!isSemanticallyValidFallback(key, scores)) continue;
+    const d = sqDist(scores, FALLBACK_PROTOTYPES[key]);
+    if (d < bestDist) {
+      bestDist = d;
+      best = key;
+    }
+  }
+
+  if (best) return best;
+
+  // Sem candidato válido pelos guardrails: usa o mais próximo entre os 7.
+  for (const key of Object.keys(FALLBACK_PROTOTYPES) as FallbackKey[]) {
+    const d = sqDist(scores, FALLBACK_PROTOTYPES[key]);
+    if (d < bestDist) {
+      bestDist = d;
+      best = key;
+    }
+  }
+
+  return best ?? "profissional_invisivel";
+}
+
+function fallbackByWeakestPilar(scores: MECAScores): ArchetypeKey | null {
+  const values = [scores.M, scores.E, scores.C, scores.A];
+  const min = Math.min(...values);
+  const countMin = values.filter((v) => v === min).length;
+  const zone = computePositionZone(
+    computeCapacityAxis(scores),
+    computeDirectionAxis(scores),
+  );
+
+  // Empate no menor pilar: usa uma âncora estável por zona.
+  if (countMin > 1) {
+    switch (zone) {
+      case "aceleracao":
+      case "potencial_desperdicado":
+        return "util_sem_direcao";
+      case "esforco_invisivel":
+        return "executor_isolado";
+      case "invisibilidade":
+        return "profissional_invisivel";
+    }
+  }
+
+  const weak = weakestPilar(scores);
+  switch (weak) {
+    case "C":
+      return "protagonista_desalinhado";
+    case "E":
+      return "executor_isolado";
+    case "A":
+      return "estrategista_estagnado";
+    case "M":
+      return "util_sem_direcao";
+  }
 }
 
 /**

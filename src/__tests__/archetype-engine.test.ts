@@ -155,7 +155,7 @@ describe("classifyArchetype — 8 rules", () => {
   });
 
   it("Rule 1 — one pillar below 60 does not yield Acelerado MECA", () => {
-    expect(classifyArchetype(s(60, 60, 60, 59))).toBe("protagonista_desalinhado");
+    expect(classifyArchetype(s(60, 60, 60, 59))).toBe("estrategista_estagnado");
   });
 
   it("Rule 2 — high E + low M → Útil Sem Direção", () => {
@@ -202,10 +202,12 @@ describe("classifyArchetype — 8 rules", () => {
   });
 
   it("fallback: mid scores map to the zone's anchor archetype", () => {
-    expect(classifyArchetype(s(55, 55, 55, 55))).toBe(
-      "protagonista_desalinhado",
-    );
+    expect(classifyArchetype(s(55, 55, 55, 55))).toBe("util_sem_direcao");
     expect(classifyArchetype(s(45, 45, 45, 45))).toBe("profissional_invisivel");
+  });
+
+  it("fallback in aceleracao does not force Protagonista when C is not weak", () => {
+    expect(classifyArchetype(s(63, 40, 73, 52))).toBe("executor_isolado");
   });
 });
 

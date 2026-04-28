@@ -494,11 +494,22 @@ function buildHtml(params: {
   .page {
     position: relative;
     width: 210mm;
-    padding: 12mm 18mm 14mm;
+    padding: 12mm 18mm 18mm;
     break-before: auto;
     page-break-before: auto;
   }
   .page + .page { padding-top: 10mm; }
+  .page::after {
+    content: "Método MECA por Felipe Aguiar de Carvalho - felipe.aguiardecarvalho@gmail.com";
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    bottom: 5mm;
+    font-size: 9px;
+    color: #94a3b8;
+    letter-spacing: 0.03em;
+    text-align: center;
+  }
 
   /* Atomic block helper — wrap title + first-content to prevent orphan titles. */
   .keep-together {
@@ -635,6 +646,18 @@ function buildHtml(params: {
     page-break-inside: avoid;
     break-after: page;
     page-break-after: always;
+  }
+  .cover::after {
+    content: "Método MECA por Felipe Aguiar de Carvalho - felipe.aguiardecarvalho@gmail.com";
+    position: absolute;
+    left: 20mm;
+    right: 20mm;
+    bottom: 8mm;
+    font-size: 9px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.03em;
+    text-align: center;
+    z-index: 2;
   }
   .cover::before {
     content: "";
@@ -1681,6 +1704,13 @@ function buildHtml(params: {
     line-height: 1.62;
     max-width: 155mm;
   }
+  .closing-cta {
+    margin-top: 14px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #1a3a5c;
+    line-height: 1.5;
+  }
 
 </style>
 </head>
@@ -1861,14 +1891,19 @@ ${buildTheorySections(theories)}
   </div>
   <div class="closing-card">
     <div class="closing-eyebrow">Continuidade</div>
-    <div class="closing-title">Próximo passo</div>
+    <div class="closing-title">PRÓXIMO NÍVEL DA SUA EVOLUÇÃO</div>
     <p class="closing-text">
-      Este documento é uma fotografia do seu momento atual. O diagnóstico MECA foi
-      desenhado para ser revisitado ao longo do tempo — cada novo diagnóstico
-      gera um novo mapa comportamental e permite medir a evolução entre pontos.
-      Use este relatório como referência estratégica e volte ao método sempre que
-      houver uma mudança relevante no seu contexto de carreira.
+      Este relatório te trouxe clareza.
+      <br><br>
+      Agora, o que realmente define o seu crescimento não é o que você entendeu — é o que você sustenta na prática.
+      <br><br>
+      A maioria dos profissionais permanece no mesmo nível não por falta de capacidade, mas por falta de direção aplicada e consistência ao longo do tempo.
+      <br><br>
+      Se você quiser transformar esse diagnóstico em evolução real, o próximo passo é aprofundar o método com orientação estruturada.
+      <br><br>
+      No programa completo, você terá acesso ao conteúdo aprofundado de todas as teorias do MECA, além de acompanhamento direto comigo para aplicar, ajustar e acelerar sua evolução com consistência.
     </p>
+    <p class="closing-cta">→ Acesse o programa completo e continue sua evolução com clareza e direção.</p>
   </div>
 </section>
 

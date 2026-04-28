@@ -274,7 +274,7 @@ function buildQuadrantGraph(archetype: ArchetypeResult): string {
 
   const cells = ZONE_ORDER.map(({ key, gridArea }) => {
     const zone = ZONES[key];
-    const isActive = archetype.zone === key;
+    const isActive = archetype.positionZone === key;
     const isBottomZone = key === "invisibilidade" || key === "esforco_invisivel";
     const chips = archetypesInZone(key)
       .map((a) => {
@@ -301,11 +301,17 @@ function buildQuadrantGraph(archetype: ArchetypeResult): string {
 
   return `
     <div class="quad-wrap">
-      <div class="quad-axis-y">
-        <span class="quad-axis-y-label">Direção e Sistema (C+E)</span>
-      </div>
-      <div class="quad-matrix-wrap">
+      <div class="quad-stage">
+        <div class="quad-axis-top">
+          <div class="quad-axis-top-title">↑ ALTA DIREÇÃO E SISTEMA</div>
+          <div class="quad-axis-top-sub">Leitura de contexto · Posicionamento · Engajamento (C+E)</div>
+        </div>
+        <div class="quad-axis-bottom">↓ BAIXA DIREÇÃO E SISTEMA</div>
+        <div class="quad-axis-left">← BAIXA CAPACIDADE</div>
+        <div class="quad-axis-right">← ALTA CAPACIDADE</div>
         <div class="quad-matrix">
+          <div class="quad-cross-v"></div>
+          <div class="quad-cross-h"></div>
           ${cells}
           <div class="quad-neutral-zone">
             <div class="quad-neutral-zone-label">Zona de Transicao</div>
@@ -315,9 +321,6 @@ function buildQuadrantGraph(archetype: ArchetypeResult): string {
             <div class="quad-dot-core"></div>
             <div class="quad-dot-label">Você está aqui</div>
           </div>
-        </div>
-        <div class="quad-axis-x">
-          <span class="quad-axis-x-label">Capacidade (A)</span>
         </div>
       </div>
     </div>`;
@@ -833,41 +836,109 @@ function buildHtml(params: {
 
   /* ---------- QUADRANT GRAPH ---------- */
   .quad-wrap {
-    display: grid;
-    grid-template-columns: 20px 1fr;
-    gap: 12px;
+    width: 100%;
     margin-top: 6px;
   }
-  .quad-axis-y {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    text-align: center;
-    font-size: 10px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: #64748b;
-    font-weight: 700;
-    padding-top: 4px;
+  .quad-stage {
+    position: relative;
+    padding-top: 36px;
+    padding-bottom: 36px;
+    padding-left: 124px;
+    padding-right: 96px;
   }
-  .quad-matrix-wrap { display: flex; flex-direction: column; }
+  .quad-axis-top {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .quad-axis-top-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a3a5c;
+  }
+  .quad-axis-top-sub {
+    font-size: 10px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+  .quad-axis-bottom {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a3a5c;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .quad-axis-left {
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    transform-origin: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a3a5c;
+    white-space: nowrap;
+    width: 180px;
+    text-align: center;
+  }
+  .quad-axis-right {
+    position: absolute;
+    right: -60px;
+    top: 50%;
+    transform: translateY(-50%) rotate(90deg);
+    transform-origin: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a3a5c;
+    white-space: nowrap;
+    width: 180px;
+    text-align: center;
+  }
   .quad-matrix {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 0.72;
+    aspect-ratio: 1 / 1;
     display: grid;
     grid-template-areas: "tl tr" "bl br";
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 6px;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 6px;
-    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .quad-cross-v {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: #94a3b8;
+    z-index: 2;
+    transform: translateX(-50%);
+  }
+  .quad-cross-h {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background: #94a3b8;
+    z-index: 2;
+    transform: translateY(-50%);
   }
   .quad-cell {
     position: relative;
-    border-radius: 10px;
-    padding: 12px;
+    border-radius: 0;
+    padding: 14px 12px 20px;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -882,8 +953,9 @@ function buildHtml(params: {
   .quad-zone-label {
     font-size: 10px;
     font-weight: 800;
+    opacity: 0.85;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.06em;
     text-align: center;
   }
   .quad-zone-label-bottom {
@@ -892,29 +964,32 @@ function buildHtml(params: {
   }
   .quad-chips {
     display: flex;
-    flex-direction: column;
-    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
   }
   .quad-chip {
     display: flex;
     align-items: center;
     gap: 6px;
     background: rgba(255,255,255,0.7);
-    border: 1px solid rgba(15,23,42,0.06);
+    border: 1px solid rgba(0,0,0,0.08);
     border-radius: 999px;
-    padding: 3px 9px 3px 7px;
-    font-size: 10px;
+    padding: 4px 8px;
+    font-size: 10.5px;
+    font-weight: 600;
     color: #334155;
     line-height: 1.3;
+    white-space: nowrap;
   }
   .quad-chip-current {
-    background: #0f172a;
+    background: #1a3a5c;
     color: #fff;
-    border-color: #0f172a;
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(15,23,42,0.2);
+    border: 1.5px solid #1a3a5c;
+    font-weight: 800;
+    box-shadow: none;
   }
-  .quad-chip-icon { font-size: 10px; }
+  .quad-chip-icon { font-size: 10px; margin-right: 4px; }
   .quad-chip-label { font-size: 10px; white-space: nowrap; }
   .quad-neutral-zone {
     position: absolute;
@@ -950,40 +1025,30 @@ function buildHtml(params: {
     position: absolute;
     left: 50%; top: 50%;
     transform: translate(-50%, -50%);
-    width: 34px; height: 34px;
+    width: 44px; height: 44px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(74,144,217,0.45) 0%, rgba(74,144,217,0) 70%);
+    background: rgba(26,58,92,0.22);
   }
   .quad-dot-core {
     position: relative;
-    width: 14px; height: 14px;
+    width: 20px; height: 20px;
     border-radius: 50%;
-    background: #0f172a;
+    background: #1a3a5c;
     border: 3px solid #fff;
-    box-shadow: 0 2px 8px rgba(15,23,42,0.35);
+    box-shadow: 0 3px 10px rgba(26,58,92,0.5);
   }
   .quad-dot-label {
     position: absolute;
-    left: 20px; top: -8px;
-    background: #0f172a;
+    left: 28px; top: -18px;
+    background: #1a3a5c;
     color: #fff;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: normal;
     padding: 3px 8px;
     border-radius: 6px;
     white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(15,23,42,0.25);
-  }
-
-  .quad-axis-x {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 10px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: #64748b;
-    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(26,58,92,0.3);
   }
 
   .hero-coords {

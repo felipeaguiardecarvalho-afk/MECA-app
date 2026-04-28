@@ -2114,7 +2114,11 @@ export async function GET(request: NextRequest) {
   };
 
   const answers: Record<string, number> = row.answers ?? {};
-  const theories = getLowestTheories(answers, 4);
+  const weakestPillar = getActionPlan(scores).pillarKey;
+  const theories = getLowestTheories(answers, 5, {
+    weakestPillar,
+    minFromWeakestPillar: 3,
+  });
 
   const generatedAt = `${new Date().toLocaleDateString("pt-BR", {
     day: "2-digit",

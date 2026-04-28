@@ -52,8 +52,13 @@ describe("getActionPlan", () => {
     expect(titles.size).toBe(4);
   });
 
-  it("empate: prioridade Mentalidade → Engajamento → Cultura → Performance", () => {
+  it("empate usa potencial de alavancagem comportamental", () => {
     const p = getActionPlan(s(40, 40, 40, 40));
+    expect(p.pillarKey).toBe("engajamento");
+  });
+
+  it("empate total em 100 mantém Mentalidade", () => {
+    const p = getActionPlan(s(100, 100, 100, 100));
     expect(p.pillarKey).toBe("mentalidade");
   });
 });

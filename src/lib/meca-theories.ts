@@ -418,16 +418,34 @@ export interface ScoredTheory extends MecaTheory {
   score: number;
 }
 
+type LowestTheoryOptions = {
+  weakestPillar?: TheoryPillar;
+  minFromWeakestPillar?: number;
+};
+
 export function getLowestTheories(
   answers: Record<string, number>,
   count = 4,
+  options: LowestTheoryOptions = {},
 ): ScoredTheory[] {
   const scored: ScoredTheory[] = MECA_THEORIES.map((t) => ({
     ...t,
     score: computeTheoryScore(t.questionIds, answers),
   }));
-  scored.sort((a, b) => a.score - b.score);
-  return scored.slice(0, count);
+  scored.sort((a, b) => a.score - b.score || a.id - b.id);
+
+  const { weakestPillar, minFromWeakestPillar = 0 } = options;
+  if (!weakestPillar || minFromWeakestPillar <= 0) {
+    return scored.slice(0, count);
+  }
+
+  const fromWeakest = scored.filter((t) => t.pillar === weakestPillar);
+  const guaranteed = fromWeakest.slice(0, Math.min(minFromWeakestPillar, count));
+
+  const selectedIds = new Set(guaranteed.map((t) => t.id));
+  const remaining = scored.filter((t) => !selectedIds.has(t.id));
+
+  return [...guaranteed, ...remaining].slice(0, count);
 }
 
 // ─── Legacy exports used by MECAPillarsSection / TheoryCard / TheoryModal ────

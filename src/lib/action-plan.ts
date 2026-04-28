@@ -10,12 +10,23 @@ export type FourPillarScores = {
 
 export type ActionPlanPillarKey = keyof FourPillarScores;
 
-/** Ordem de desempate: primeiro pilar com valor mínimo nesta ordem. */
+/** Ordem canônica para iteração/consistência interna. */
 const PILLAR_ORDER: ActionPlanPillarKey[] = [
   "mentalidade",
   "engajamento",
   "cultura",
   "performance",
+];
+
+/**
+ * Empate no menor score: prioriza o pilar com maior potencial de alavancagem comportamental.
+ * Exceção de negócio: quando todos os pilares = 100, mantém Mentalidade.
+ */
+const BEHAVIORAL_LEVERAGE_ORDER: ActionPlanPillarKey[] = [
+  "engajamento",
+  "cultura",
+  "performance",
+  "mentalidade",
 ];
 
 const PILLAR_LABEL: Record<ActionPlanPillarKey, string> = {
@@ -87,20 +98,29 @@ export function mecaScoresToFourPillar(scores: MECAScores): FourPillarScores {
   };
 }
 
-/** Identifica o pilar com menor score (empates: ordem Mentalidade → Engajamento → Cultura → Performance). */
+/** Identifica o pilar com menor score (com desempate por alavancagem comportamental). */
 export function getBottleneckPillar(
   four: FourPillarScores,
 ): { key: ActionPlanPillarKey; value: number } {
-  let key: ActionPlanPillarKey = PILLAR_ORDER[0];
-  let value = four[key];
-  for (const k of PILLAR_ORDER) {
-    const v = four[k];
-    if (v < value) {
-      value = v;
-      key = k;
+  const value = Math.min(...PILLAR_ORDER.map((k) => four[k]));
+  const minKeys = PILLAR_ORDER.filter((k) => four[k] === value);
+
+  if (minKeys.length === 1) {
+    return { key: minKeys[0], value };
+  }
+
+  if (PILLAR_ORDER.every((k) => four[k] === 100)) {
+    return { key: "mentalidade", value };
+  }
+
+  for (const k of BEHAVIORAL_LEVERAGE_ORDER) {
+    if (minKeys.includes(k)) {
+      return { key: k, value };
     }
   }
-  return { key, value };
+
+  // Fallback defensivo (não esperado): mantém ordem canônica.
+  return { key: minKeys[0], value };
 }
 
 export type ActionPlanResult = {

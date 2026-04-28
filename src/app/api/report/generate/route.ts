@@ -370,20 +370,7 @@ function buildHtml(params: {
   // -------- Archetype text ------------------------------------------------
   const archetypeName = sanitizePdfText(archetype.name);
   const archetypeZone = sanitizePdfText(archetype.zoneLabel);
-  const archetypeDiagnosis = sanitizePdfText(archetype.report.diagnosis);
   const archetypeMechanics = sanitizePdfText(archetype.report.mechanics);
-  const archetypeRisk = sanitizePdfText(archetype.report.risk);
-  const archetypeLeverage = sanitizePdfText(archetype.report.leverage);
-
-  const archetypeActionPlan = archetype.report.action_plan
-    .map(
-      (step, i) => `
-        <li class="arch-step">
-          <span class="arch-step-num">${i + 1}</span>
-          <span class="arch-step-text">${sanitizePdfText(step)}</span>
-        </li>`,
-    )
-    .join("");
 
   // -------- Pillar bars (ordered by ranking: weakest → strongest) ---------
   const pillarBars = ranking
@@ -1797,75 +1784,6 @@ function buildHtml(params: {
     <div class="pillars-section-title">Leitura detalhada</div>
     <div class="pillars-grid">
       ${pillarBars}
-    </div>
-  </div>
-</section>
-
-<!-- ================================================================== -->
-<!-- PAGE 5 · ARCHETYPE DEEP DIVE                                        -->
-<!-- ================================================================== -->
-<section class="page">
-  <div class="page-head">
-    <span class="page-head-brand">ME<span>CA</span> · Relatório</span>
-    <span>Seu arquétipo</span>
-  </div>
-
-  <div class="arch-opener">
-    <div class="eyebrow">Seu arquétipo</div>
-    <h2 class="section-title">Identidade comportamental</h2>
-    <p class="section-kicker">
-      Leitura aprofundada do seu arquétipo. Estrutura: Diagnóstico · Mecânica ·
-      Risco · Alavanca · Plano de ação.
-    </p>
-
-    <div class="arch-identity">
-      <div class="arch-identity-zone">${archetypeZone}</div>
-      <div class="arch-identity-name">
-        <span class="arch-identity-icon">${sanitizePdfText(archetype.icon)}</span>
-        <span>${archetypeName}</span>
-      </div>
-      <p class="arch-identity-tagline">${archetypeMechanics}</p>
-    </div>
-  </div>
-
-  <div class="arch-grid">
-    <div class="arch-block">
-      <div class="arch-block-head">
-        <span class="arch-block-label">Diagnóstico</span>
-      </div>
-      <p>${archetypeDiagnosis}</p>
-    </div>
-
-    <div class="arch-block">
-      <div class="arch-block-head">
-        <span class="arch-block-label">Mecânica</span>
-      </div>
-      <p>${archetypeMechanics}</p>
-    </div>
-
-    <div class="arch-block arch-block-risk">
-      <div class="arch-block-head">
-        <span class="arch-block-label">Risco</span>
-        <span class="arch-block-tag">Atenção</span>
-      </div>
-      <p>${archetypeRisk}</p>
-    </div>
-
-    <div class="arch-block arch-block-leverage">
-      <div class="arch-block-head">
-        <span class="arch-block-label">Alavanca</span>
-        <span class="arch-block-tag">Oportunidade</span>
-      </div>
-      <p>${archetypeLeverage}</p>
-    </div>
-
-    <div class="arch-block arch-block-plan">
-      <div class="arch-block-head">
-        <span class="arch-block-label">Plano de ação do arquétipo</span>
-      </div>
-      <ul class="arch-steps">
-        ${archetypeActionPlan}
-      </ul>
     </div>
   </div>
 </section>

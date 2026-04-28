@@ -10,15 +10,20 @@ describe("getActionPlan", () => {
   it("escolhe Mentalidade quando é o único mínimo", () => {
     const p = getActionPlan(s(20, 50, 50, 50));
     expect(p.pillarKey).toBe("mentalidade");
+    expect(p.secondaryPillarKey).toBe("engajamento");
     expect(p.title).toContain("protagonismo");
     expect(p.actions).toHaveLength(4);
     expect(p.actions[0]).toContain("solução");
+    expect(p.actions[1]).toContain("decisão");
+    expect(p.actions[2]).toContain("responsabilidades");
+    expect(p.actions[3]).toContain("alinhamento curto");
     expect(p.actions[0]).toContain("Fundamentos");
   });
 
   it("escolhe Engajamento quando é o mínimo", () => {
     const p = getActionPlan(s(80, 15, 70, 70));
     expect(p.pillarKey).toBe("engajamento");
+    expect(p.secondaryPillarKey).toBe("cultura");
     expect(p.title).toContain("visibilidade");
     expect(p.actions.some((a) => a.toLowerCase().includes("comunica"))).toBe(
       true,
@@ -55,11 +60,24 @@ describe("getActionPlan", () => {
   it("empate usa potencial de alavancagem comportamental", () => {
     const p = getActionPlan(s(40, 40, 40, 40));
     expect(p.pillarKey).toBe("engajamento");
+    expect(p.secondaryPillarKey).toBe("cultura");
   });
 
   it("empate total em 100 mantém Mentalidade", () => {
     const p = getActionPlan(s(100, 100, 100, 100));
     expect(p.pillarKey).toBe("mentalidade");
+    expect(p.secondaryPillarKey).toBe("engajamento");
+  });
+
+  it("monta 3 ações do menor pilar + 1 do segundo menor", () => {
+    const p = getActionPlan(s(90, 90, 90, 5));
+    expect(p.pillarKey).toBe("performance");
+    expect(p.secondaryPillarKey).toBe("engajamento");
+    expect(p.actions).toHaveLength(4);
+    expect(p.actions[0]).toContain("Priorize");
+    expect(p.actions[1]).toContain("blocos semanais");
+    expect(p.actions[2]).toContain("carga cognitiva");
+    expect(p.actions[3]).toContain("alinhamento curto");
   });
 });
 

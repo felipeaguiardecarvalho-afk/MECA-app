@@ -123,9 +123,30 @@ export function getBottleneckPillar(
   return { key: minKeys[0], value };
 }
 
+function rankPillarsByScore(four: FourPillarScores): ActionPlanPillarKey[] {
+  // Excecao de negocio: quando tudo = 100, manter Mentalidade como ancora principal.
+  if (PILLAR_ORDER.every((k) => four[k] === 100)) {
+    return ["mentalidade", "engajamento", "cultura", "performance"];
+  }
+
+  const tieBreakPriority: Record<ActionPlanPillarKey, number> = {
+    engajamento: 0,
+    cultura: 1,
+    performance: 2,
+    mentalidade: 3,
+  };
+
+  return [...PILLAR_ORDER].sort((a, b) => {
+    const diff = four[a] - four[b];
+    if (diff !== 0) return diff;
+    return tieBreakPriority[a] - tieBreakPriority[b];
+  });
+}
+
 export type ActionPlanResult = {
   pillar: string;
   pillarKey: ActionPlanPillarKey;
+  secondaryPillarKey: ActionPlanPillarKey;
   lowestScore: number;
   title: string;
   description: string;
@@ -142,14 +163,24 @@ export function getActionPlan(scores: MECAScores): ActionPlanResult {
   const four = mecaScoresToFourPillar(scores);
   const { key, value } = getBottleneckPillar(four);
   const template = PLANS[key];
+  const ranked = rankPillarsByScore(four);
+  const secondaryKey = ranked.find((pillar) => pillar !== key) ?? key;
+  const secondaryTemplate = PLANS[secondaryKey];
+
+  const primaryActions = template.actions.slice(0, 3);
+  const secondaryAction = secondaryTemplate.actions[0]
+    ? [secondaryTemplate.actions[0]]
+    : [];
+  const actions = [...primaryActions, ...secondaryAction];
 
   return {
     pillar: PILLAR_LABEL[key],
     pillarKey: key,
+    secondaryPillarKey: secondaryKey,
     lowestScore: value,
     title: template.title,
     description: template.description,
-    actions: [...template.actions],
+    actions,
     scores: { ...four },
   };
 }

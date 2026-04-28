@@ -399,11 +399,15 @@ export function computeTheoryScore(
   theoryQuestionIds: number[],
   answers: Record<string, number>,
 ): number {
+  const reverseQuestionIds = new Set<number>([
+    4, 6, 14, 15, 17, 20, 22, 25, 31, 34, 38, 40, 42, 45, 46, 48, 52, 54, 58, 60,
+  ]);
   const scores: number[] = [];
   for (const qId of theoryQuestionIds) {
     const raw = answers[String(qId)];
-    if (raw == null) continue;
-    const score = Math.round(((raw - 1) / 4) * 100);
+    if (typeof raw !== "number" || raw < 1 || raw > 5) continue;
+    const correctedRaw = reverseQuestionIds.has(qId) ? 6 - raw : raw;
+    const score = Math.round(((correctedRaw - 1) / 4) * 100);
     scores.push(score);
   }
   if (scores.length === 0) return 50;

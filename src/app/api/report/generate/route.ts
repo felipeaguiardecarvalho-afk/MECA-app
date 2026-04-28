@@ -91,8 +91,30 @@ function buildTheorySections(theories: ScoredTheory[]): string {
         )
         .join("");
 
+      const opener =
+        idx === 0
+          ? `
+      <div class="theories-opener">
+        <div class="eyebrow">Fundamentos aplicados ao seu caso</div>
+        <h2 class="section-title">Teorias que mais impactam a sua trajetória hoje</h2>
+        <p class="theories-intro">
+          As teorias abaixo foram selecionadas automaticamente com base nas suas menores
+          pontuações individuais. Cada uma representa um padrão de comportamento que,
+          quando desenvolvido, gera impacto direto na sua performance e trajetória
+          profissional. O diagnóstico, a fundamentação e o plano de ação foram
+          personalizados com base nas suas respostas.
+        </p>
+      </div>`
+          : "";
+
       return `
-    <div class="theory-card" style="border-left:5px solid ${color}">
+    <section class="page theory-page">
+      <div class="page-head">
+        <span class="page-head-brand">ME<span>CA</span> · Relatório</span>
+        <span>Fundamentos aplicados</span>
+      </div>
+      ${opener}
+      <div class="theory-card" style="border-left:5px solid ${color}">
       <div class="theory-header">
         <div class="theory-header-main">
           <span class="theory-index">Teoria ${idx + 1} de ${theories.length}</span>
@@ -129,7 +151,8 @@ function buildTheorySections(theories: ScoredTheory[]): string {
         <span class="theory-result-label">Resultado esperado</span>
         <p class="theory-result-text">${resultado}</p>
       </div>
-    </div>`;
+      </div>
+    </section>`;
     })
     .join("\n");
 }
@@ -1493,6 +1516,11 @@ function buildHtml(params: {
     page-break-inside: auto;
     break-inside: auto;
   }
+  .theory-page .theory-card {
+    margin-bottom: 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
   .theory-header,
   .theory-section,
   .theory-result,
@@ -1824,26 +1852,13 @@ function buildHtml(params: {
 <!-- ================================================================== -->
 <!-- PAGE 7+ · THEORIES APPENDIX                                         -->
 <!-- ================================================================== -->
+${buildTheorySections(theories)}
+
 <section class="page">
   <div class="page-head">
     <span class="page-head-brand">ME<span>CA</span> · Relatório</span>
-    <span>Fundamentos aplicados</span>
+    <span>Continuidade</span>
   </div>
-
-  <div class="theories-opener">
-    <div class="eyebrow">Fundamentos aplicados ao seu caso</div>
-    <h2 class="section-title">Teorias que mais impactam a sua trajetória hoje</h2>
-    <p class="theories-intro">
-      As teorias abaixo foram selecionadas automaticamente com base nas suas menores
-      pontuações individuais. Cada uma representa um padrão de comportamento que,
-      quando desenvolvido, gera impacto direto na sua performance e trajetória
-      profissional. O diagnóstico, a fundamentação e o plano de ação foram
-      personalizados com base nas suas respostas.
-    </p>
-  </div>
-
-  ${buildTheorySections(theories)}
-
   <div class="closing-card">
     <div class="closing-eyebrow">Continuidade</div>
     <div class="closing-title">Próximo passo</div>

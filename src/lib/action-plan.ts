@@ -236,8 +236,8 @@ export function getActionPlan(
       .slice(0, 1);
 
     const selected = [...primarySelected, ...secondarySelected].slice(0, 4);
-    const theoryItems = selected
-      .map((entry) => {
+    const theoryItems: ActionPlanItem[] = selected
+      .map((entry): ActionPlanItem | null => {
         const action1 = entry.theory.acoes[0];
         const action2 = entry.theory.acoes[1];
         if (!action1) return null;
@@ -256,9 +256,9 @@ export function getActionPlan(
           dashboardText,
           pdfActionText: pdfActionText || action1,
           foundationText,
-          theoryId: entry.theory.id,
-          theoryName: entry.theory.name,
-        } satisfies ActionPlanItem;
+          theoryId: Number(entry.theory.id),
+          theoryName: entry.theory.name ?? "",
+        };
       })
       .filter((item): item is ActionPlanItem => item !== null);
 

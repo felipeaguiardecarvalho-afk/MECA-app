@@ -149,13 +149,14 @@ describe("position zone (quadrant from xScore/yScore)", () => {
 });
 
 describe("classifyArchetype — 8 rules", () => {
-  it("Rule 1 — all pillars ≥ 60 → Acelerado MECA", () => {
+  it("Rule 1 — all pillars ≥ 70 → Acelerado MECA", () => {
     expect(classifyArchetype(s(80, 80, 80, 80))).toBe("acelerado_meca");
-    expect(classifyArchetype(s(60, 60, 60, 60))).toBe("acelerado_meca");
+    expect(classifyArchetype(s(70, 70, 70, 70))).toBe("acelerado_meca");
   });
 
-  it("Rule 1 — one pillar below 60 does not yield Acelerado MECA", () => {
-    expect(classifyArchetype(s(60, 60, 60, 59))).toBe("estrategista_estagnado");
+  it("Rule 1 — one pillar below 70 does not yield Acelerado MECA", () => {
+    expect(classifyArchetype(s(70, 70, 70, 69))).toBe("estrategista_estagnado");
+    expect(classifyArchetype(s(71, 71, 71, 69))).toBe("estrategista_estagnado");
   });
 
   it("Rule 2 — high E + low M → Útil Sem Direção", () => {

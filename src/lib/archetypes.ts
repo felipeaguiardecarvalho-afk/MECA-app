@@ -23,7 +23,7 @@
  *   5. Profissional Invisível    → Zona de Invisibilidade
  *   6. Performático Exausto      → Zona de Esforço Invisível
  *   7. Bem-Quisto Estagnado      → Potencial Desperdiçado
- *   8. Acelerado MECA            → Zona de Aceleração (só se M,E,C,A ≥ 60)
+ *   8. Acelerado MECA            → Zona de Aceleração (só se M,E,C,A ≥ 70)
  *
  * Regra de consistência: `getArchetype()` é a ÚNICA função que classifica.
  * Qualquer override manual é proibido — o motor de relatório, o PDF, o dashboard
@@ -320,6 +320,7 @@ export function computePositionZone(
 
 const HIGH = 60;
 const LOW = 40;
+const ACCELERATED_MIN = 70;
 
 const BAND_HIGH = (v: number) => v >= HIGH;
 const BAND_LOW = (v: number) => v <= LOW;
@@ -328,7 +329,7 @@ const BAND_LOW = (v: number) => v <= LOW;
  * Classifica o arquétipo a partir dos 4 pilares.
  *
  * Prioridade (primeira regra verdadeira vence):
- *   1) Acelerado MECA              — min(M,E,C,A) ≥ HIGH
+ *   1) Acelerado MECA              — min(M,E,C,A) ≥ 70
  *   2) Útil Sem Direção            — alto E + baixo M
  *   3) Bem-Quisto Estagnado        — alto E + alto C + baixo A
  *   4) Estrategista Estagnado      — alto C + baixo A
@@ -346,7 +347,12 @@ const BAND_LOW = (v: number) => v <= LOW;
 export function classifyArchetype(scores: MECAScores): ArchetypeKey {
   const { M, E, C, A } = scores;
 
-  if (BAND_HIGH(M) && BAND_HIGH(E) && BAND_HIGH(C) && BAND_HIGH(A)) {
+  if (
+    M >= ACCELERATED_MIN &&
+    E >= ACCELERATED_MIN &&
+    C >= ACCELERATED_MIN &&
+    A >= ACCELERATED_MIN
+  ) {
     return "acelerado_meca";
   }
 

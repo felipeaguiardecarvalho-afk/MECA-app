@@ -1,4 +1,9 @@
 import type { MECAScores } from "@/utils/archetypeEngine";
+import {
+  computeTheoryScore,
+  MECA_THEORIES,
+  type TheoryPillar,
+} from "@/lib/meca-theories";
 
 /** Quatro pilares alinhados ao diagnóstico (0–100). */
 export type FourPillarScores = {
@@ -151,6 +156,7 @@ export type ActionPlanResult = {
   title: string;
   description: string;
   actions: string[];
+  actionTheoryIds: number[];
   /** Valores por pilar (para transparência na UI). */
   scores: FourPillarScores;
 };
@@ -159,7 +165,10 @@ export type ActionPlanResult = {
  * Plano de ação derivado do gargalo: menor entre mentalidade, engajamento, cultura e performance.
  * Conteúdo específico por pilar — não é genérico entre pilares.
  */
-export function getActionPlan(scores: MECAScores): ActionPlanResult {
+export function getActionPlan(
+  scores: MECAScores,
+  answers?: Record<string, number> | null,
+): ActionPlanResult {
   const four = mecaScoresToFourPillar(scores);
   const { key, value } = getBottleneckPillar(four);
   const template = PLANS[key];
@@ -167,11 +176,42 @@ export function getActionPlan(scores: MECAScores): ActionPlanResult {
   const secondaryKey = ranked.find((pillar) => pillar !== key) ?? key;
   const secondaryTemplate = PLANS[secondaryKey];
 
+  const hasAnswers = Boolean(answers && Object.keys(answers).length > 0);
   const primaryActions = template.actions.slice(0, 3);
   const secondaryAction = secondaryTemplate.actions[0]
     ? [secondaryTemplate.actions[0]]
     : [];
-  const actions = [...primaryActions, ...secondaryAction];
+
+  let actions = [...primaryActions, ...secondaryAction];
+  let actionTheoryIds: number[] = [];
+
+  if (hasAnswers) {
+    const answerMap = answers ?? {};
+    const scored = MECA_THEORIES.map((theory) => ({
+      theory,
+      score: computeTheoryScore(theory.questionIds, answerMap),
+    })).sort((a, b) => a.score - b.score || a.theory.id - b.theory.id);
+
+    const primaryPillar = key as TheoryPillar;
+    const secondaryPillar = secondaryKey as TheoryPillar;
+
+    const primarySelected = scored
+      .filter((entry) => entry.theory.pillar === primaryPillar)
+      .slice(0, 3);
+    const secondarySelected = scored
+      .filter((entry) => entry.theory.pillar === secondaryPillar)
+      .slice(0, 1);
+
+    const selected = [...primarySelected, ...secondarySelected].slice(0, 4);
+    const theoryActions = selected
+      .map((entry) => entry.theory.acoes[0])
+      .filter((text): text is string => typeof text === "string" && text.length > 0);
+
+    if (theoryActions.length === 4) {
+      actions = theoryActions;
+      actionTheoryIds = selected.map((entry) => entry.theory.id);
+    }
+  }
 
   return {
     pillar: PILLAR_LABEL[key],
@@ -181,6 +221,7 @@ export function getActionPlan(scores: MECAScores): ActionPlanResult {
     title: template.title,
     description: template.description,
     actions,
+    actionTheoryIds,
     scores: { ...four },
   };
 }

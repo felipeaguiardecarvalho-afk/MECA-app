@@ -17,6 +17,7 @@ export function PlanoDeAcaoClient() {
   const saved = searchParams.get("saved");
 
   const [scores, setScores] = useState<MECAScores | null>(null);
+  const [answers, setAnswers] = useState<Record<string, number> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -50,6 +51,7 @@ export function PlanoDeAcaoClient() {
 
       if (chosen) {
         setScores(diagnosticRowToMECAScores(chosen));
+        setAnswers(chosen.answers ?? null);
       }
     } catch {
       setError("Não foi possível carregar os dados.");
@@ -63,8 +65,8 @@ export function PlanoDeAcaoClient() {
   }, [fetchHistory, saved]);
 
   const plan = useMemo(
-    () => (scores ? getActionPlan(scores) : null),
-    [scores],
+    () => (scores ? getActionPlan(scores, answers) : null),
+    [answers, scores],
   );
 
   if (loading && !scores) {

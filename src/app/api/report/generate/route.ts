@@ -378,16 +378,17 @@ function buildHtml(params: {
   userName: string | null;
   email: string;
   scores: MECAScores;
+  answers: Record<string, number>;
   generatedAt: string;
   theories: ScoredTheory[];
 }): string {
-  const { userName, email, scores, generatedAt, theories } = params;
+  const { userName, email, scores, answers, generatedAt, theories } = params;
   const emailSafe = sanitizePdfText(email);
   const generatedAtSafe = sanitizePdfText(generatedAt);
   const userNameSafe = userName ? sanitizePdfText(userName) : "";
 
   const archetype = getArchetype(scores);
-  const plan = getActionPlan(scores);
+  const plan = getActionPlan(scores, answers);
   const ranking = getPillarRanking(scores);
 
   // Weakest = lowest, strongest = highest (ranking is ascending)
@@ -2154,7 +2155,7 @@ export async function GET(request: NextRequest) {
   };
 
   const answers: Record<string, number> = row.answers ?? {};
-  const weakestPillar = getActionPlan(scores).pillarKey;
+  const weakestPillar = getActionPlan(scores, answers).pillarKey;
   const theories = getLowestTheories(answers, 5, {
     weakestPillar,
     minFromWeakestPillar: 3,
@@ -2169,7 +2170,7 @@ export async function GET(request: NextRequest) {
     timeZone: "America/Sao_Paulo",
   })} BRT`;
 
-  const html = buildHtml({ userName, email, scores, generatedAt, theories });
+  const html = buildHtml({ userName, email, scores, answers, generatedAt, theories });
 
   let pdfBuffer: Uint8Array;
   try {

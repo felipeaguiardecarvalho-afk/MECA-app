@@ -21,6 +21,7 @@ export type HistoryRow = {
   direction: number;
   capacity: number;
   archetype: string;
+  answers: Record<string, number> | null;
 };
 
 export type HistoryPagination = {
@@ -31,7 +32,7 @@ export type HistoryPagination = {
 };
 
 const ROW_COLUMNS =
-  "id, user_id, created_at, mentalidade, engajamento, cultura, performance, direction, capacity, archetype" as const;
+  "id, user_id, created_at, mentalidade, engajamento, cultura, performance, direction, capacity, archetype, answers" as const;
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 100;
@@ -63,6 +64,18 @@ function safeNumber(value: unknown, fallback = 0): number {
 }
 
 function normalizeRows(rows: Record<string, unknown>[]): HistoryRow[] {
+  const normalizeAnswers = (
+    value: unknown,
+  ): Record<string, number> | null => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const out: Record<string, number> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      const n = Number(v);
+      if (Number.isFinite(n)) out[k] = n;
+    }
+    return out;
+  };
+
   return rows.map((r) => ({
     id: String(r.id ?? ""),
     user_id: String(r.user_id ?? ""),
@@ -74,6 +87,7 @@ function normalizeRows(rows: Record<string, unknown>[]): HistoryRow[] {
     direction: safeNumber(r.direction),
     capacity: safeNumber(r.capacity),
     archetype: String(r.archetype ?? ""),
+    answers: normalizeAnswers(r.answers),
   }));
 }
 

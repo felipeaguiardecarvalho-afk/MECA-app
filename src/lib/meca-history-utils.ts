@@ -6,6 +6,7 @@ export type ResponseRowScores = {
   engajamento: number;
   cultura: number;
   performance: number;
+  answers?: Record<string, number> | null;
 };
 
 export function pickLatestRow<T extends { created_at: string }>(

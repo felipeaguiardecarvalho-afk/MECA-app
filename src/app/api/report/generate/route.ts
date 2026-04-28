@@ -275,6 +275,7 @@ function buildQuadrantGraph(archetype: ArchetypeResult): string {
   const cells = ZONE_ORDER.map(({ key, gridArea }) => {
     const zone = ZONES[key];
     const isActive = archetype.zone === key;
+    const isBottomZone = key === "invisibilidade" || key === "esforco_invisivel";
     const chips = archetypesInZone(key)
       .map((a) => {
         const current = a.key === archetype.key;
@@ -288,10 +289,10 @@ function buildQuadrantGraph(archetype: ArchetypeResult): string {
     return `
       <div class="quad-cell ${isActive ? "quad-cell-active" : ""}"
            style="grid-area:${gridArea}; background:${zone.bgColor};">
-        <div class="quad-zone-label" style="color:${zone.textColor}">
+        <div class="quad-chips">${chips}</div>
+        <div class="quad-zone-label ${isBottomZone ? "quad-zone-label-bottom" : ""}" style="color:${zone.textColor}">
           ${sanitizePdfText(zone.label)}
         </div>
-        <div class="quad-chips">${chips}</div>
       </div>`;
   }).join("");
 
@@ -869,6 +870,7 @@ function buildHtml(params: {
     padding: 12px;
     display: flex;
     flex-direction: column;
+    height: 100%;
     gap: 8px;
     opacity: 0.72;
     transition: opacity 0.2s;
@@ -882,6 +884,11 @@ function buildHtml(params: {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
+    text-align: center;
+  }
+  .quad-zone-label-bottom {
+    margin-top: auto;
+    padding-bottom: 12px;
   }
   .quad-chips {
     display: flex;

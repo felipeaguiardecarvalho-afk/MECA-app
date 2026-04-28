@@ -1045,8 +1045,8 @@ function buildHtml(params: {
 
   /* ---------- PILLARS OVERVIEW (radar + legend) ---------- */
   .pillars-overview {
-    margin-top: 20px;
-    padding: 20px 22px 16px;
+    margin-top: 12px;
+    padding: 12px 14px 8px;
     background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%);
     border: 1px solid #e2e8f0;
     border-radius: 16px;
@@ -1075,18 +1075,18 @@ function buildHtml(params: {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 0 4px;
+    padding: 4px 0 0;
   }
   .radar-svg {
-    width: 320px;
+    width: 240px;
     max-width: 100%;
     height: auto;
   }
 
   /* ---------- PILLAR CARDS ---------- */
   .pillars-section-title {
-    margin-top: 20px;
-    margin-bottom: 12px;
+    margin-top: 8px;
+    margin-bottom: 8px;
     font-size: 11px;
     letter-spacing: 0.26em;
     text-transform: uppercase;
@@ -1102,9 +1102,9 @@ function buildHtml(params: {
     height: 1px;
     background: linear-gradient(90deg, #e2e8f0, transparent);
   }
-  .pillars-grid { display: flex; flex-direction: column; gap: 12px; }
+  .pillars-grid { display: flex; flex-direction: column; gap: 8px; }
   .pillar-card {
-    padding: 14px 18px 16px;
+    padding: 10px 14px 12px;
     border-radius: 12px;
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -1117,7 +1117,7 @@ function buildHtml(params: {
     border-color: #fecaca;
     background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
     border-left: 6px solid #dc2626;
-    padding: 22px 24px 24px;
+    padding: 12px 14px 14px;
     box-shadow: 0 4px 14px rgba(220,38,38,0.08);
   }
   .pillar-card-strong {
@@ -1149,7 +1149,7 @@ function buildHtml(params: {
 
   .pillar-card-score { display: flex; align-items: center; gap: 10px; }
   .pillar-score-num { font-size: 22px; font-weight: 800; line-height: 1; }
-  .pillar-card-weak .pillar-score-num { font-size: 28px; }
+  .pillar-card-weak .pillar-score-num { font-size: 24px; }
   .pillar-score-unit { font-size: 11px; color: #94a3b8; font-weight: 600; }
   .pillar-badge {
     font-size: 9px;
@@ -1179,9 +1179,9 @@ function buildHtml(params: {
     border-radius: 999px;
   }
   .pillar-interp {
-    font-size: 12.5px;
+    font-size: 11.5px;
     color: #475569;
-    line-height: 1.62;
+    line-height: 1.45;
   }
   .pillar-card-weak .pillar-interp   { color: #3f1b1b; }
   .pillar-card-strong .pillar-interp { color: #14532d; }

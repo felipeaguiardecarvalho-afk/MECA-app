@@ -441,15 +441,20 @@ function buildHtml(params: {
   const planDesc = sanitizePdfText(plan.description);
   const planPillar = sanitizePdfText(plan.pillar);
 
-  const mainPlanActions = plan.actions
+  const mainPlanActions = plan.actionItems
     .map(
-      (a, i) => `
+      (item, i) => `
       <li class="action-step">
         <div class="action-step-check"></div>
         <span class="action-step-num">${i + 1}</span>
         <div class="action-step-body">
           <span class="action-step-meta">Passo ${i + 1}</span>
-          <div class="action-step-text">${sanitizePdfText(a)}</div>
+          <div class="action-step-text">${sanitizePdfText(item.pdfActionText)}</div>
+          ${
+            item.foundationText
+              ? `<div class="action-step-foundation"><strong>Fundamento:</strong> ${sanitizePdfText(item.foundationText)}</div>`
+              : ""
+          }
         </div>
       </li>`,
     )
@@ -1588,6 +1593,15 @@ function buildHtml(params: {
     font-size: 13px;
     color: rgba(255,255,255,0.94);
     line-height: 1.62;
+  }
+  .action-step-foundation {
+    margin-top: 6px;
+    font-size: 11px;
+    color: rgba(207,227,255,0.92);
+    line-height: 1.5;
+  }
+  .action-step-foundation strong {
+    color: #ffffff;
   }
 
   /* ================================================================== */

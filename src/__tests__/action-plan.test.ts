@@ -108,6 +108,9 @@ describe("getActionPlan", () => {
     expect(p.actions[1]).toContain("reunião importante");
     expect(p.actions[2]).toContain("tarefas semanais");
     expect(p.actions[3]).toContain("relação de alta qualidade");
+    expect(p.actions[0]).toContain("Para embasamento, estude em Fundamentos:");
+    expect(p.actionItems[0]?.pdfActionText).toContain("processo ineficiente");
+    expect(p.actionItems[0]?.foundationText).toContain("Intraempreendedorismo");
   });
 });
 

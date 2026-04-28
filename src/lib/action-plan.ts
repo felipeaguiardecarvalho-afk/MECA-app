@@ -47,6 +47,14 @@ type PlanTemplate = {
   actions: string[];
 };
 
+export type ActionPlanItem = {
+  dashboardText: string;
+  pdfActionText: string;
+  foundationText: string;
+  theoryId?: number;
+  theoryName?: string;
+};
+
 const PLANS: Record<ActionPlanPillarKey, PlanTemplate> = {
   mentalidade: {
     title: "Desenvolver protagonismo e autonomia",
@@ -155,6 +163,7 @@ export type ActionPlanResult = {
   lowestScore: number;
   title: string;
   description: string;
+  actionItems: ActionPlanItem[];
   actions: string[];
   actionTheoryIds: number[];
   /** Valores por pilar (para transparência na UI). */
@@ -177,12 +186,36 @@ export function getActionPlan(
   const secondaryTemplate = PLANS[secondaryKey];
 
   const hasAnswers = Boolean(answers && Object.keys(answers).length > 0);
+  const foundationMarker = "Para embasamento, estude em Fundamentos:";
+  const splitTemplateAction = (text: string): ActionPlanItem => {
+    const idx = text.indexOf(foundationMarker);
+    if (idx < 0) {
+      return {
+        dashboardText: text,
+        pdfActionText: text,
+        foundationText: "",
+      };
+    }
+
+    const actionPart = text.slice(0, idx).trim();
+    const foundationPart = text
+      .slice(idx + foundationMarker.length)
+      .trim()
+      .replace(/\s+$/, "");
+
+    return {
+      dashboardText: text,
+      pdfActionText: actionPart || text,
+      foundationText: foundationPart,
+    };
+  };
+
   const primaryActions = template.actions.slice(0, 3);
   const secondaryAction = secondaryTemplate.actions[0]
     ? [secondaryTemplate.actions[0]]
     : [];
 
-  let actions = [...primaryActions, ...secondaryAction];
+  let actionItems = [...primaryActions, ...secondaryAction].map(splitTemplateAction);
   let actionTheoryIds: number[] = [];
 
   if (hasAnswers) {
@@ -203,15 +236,39 @@ export function getActionPlan(
       .slice(0, 1);
 
     const selected = [...primarySelected, ...secondarySelected].slice(0, 4);
-    const theoryActions = selected
-      .map((entry) => entry.theory.acoes[0])
-      .filter((text): text is string => typeof text === "string" && text.length > 0);
+    const theoryItems = selected
+      .map((entry) => {
+        const action1 = entry.theory.acoes[0];
+        const action2 = entry.theory.acoes[1];
+        if (!action1) return null;
 
-    if (theoryActions.length === 4) {
-      actions = theoryActions;
+        const foundationSentence = entry.theory.fundamentacao
+          .split(".")[0]
+          .trim();
+        const foundationText = foundationSentence
+          ? `${entry.theory.name}: ${foundationSentence}.`
+          : entry.theory.name;
+        const dashboardText =
+          `${action1} Para embasamento, estude em Fundamentos: ${entry.theory.name}.`.trim();
+        const pdfActionText = [action1, action2].filter(Boolean).join(" ");
+
+        return {
+          dashboardText,
+          pdfActionText: pdfActionText || action1,
+          foundationText,
+          theoryId: entry.theory.id,
+          theoryName: entry.theory.name,
+        } satisfies ActionPlanItem;
+      })
+      .filter((item): item is ActionPlanItem => item !== null);
+
+    if (theoryItems.length === 4) {
+      actionItems = theoryItems;
       actionTheoryIds = selected.map((entry) => entry.theory.id);
     }
   }
+
+  const actions = actionItems.map((item) => item.dashboardText);
 
   return {
     pillar: PILLAR_LABEL[key],
@@ -220,6 +277,7 @@ export function getActionPlan(
     lowestScore: value,
     title: template.title,
     description: template.description,
+    actionItems,
     actions,
     actionTheoryIds,
     scores: { ...four },

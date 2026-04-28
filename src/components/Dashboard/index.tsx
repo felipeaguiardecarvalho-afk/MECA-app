@@ -566,7 +566,13 @@ export const MECADashboard: React.FC = () => {
                 archetype={archetype}
                 scores={primaryScores}
                 onActionPlan={() => {
-                  const q = saved ? `?saved=${encodeURIComponent(saved)}` : "";
+                  const activeResponseId =
+                    selectedDiagnostics[selectedDiagnostics.length - 1]?.id ??
+                    sortedRows[0]?.id ??
+                    null;
+                  const q = activeResponseId
+                    ? `?saved=${encodeURIComponent(activeResponseId)}`
+                    : "";
                   router.push(`/plano-de-acao${q}`);
                 }}
               />

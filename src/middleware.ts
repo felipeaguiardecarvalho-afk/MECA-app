@@ -115,6 +115,8 @@ async function routeMiddleware(request: NextRequest): Promise<NextResponse> {
     path.startsWith("/fundamentos/") ||
     path === "/arquetipos" ||
     path.startsWith("/arquetipos/") ||
+    path === "/blog" ||
+    path.startsWith("/blog/") ||
     path === "/preview-matriz" ||
     path.startsWith("/preview-matriz/") ||
     path === "/login" ||

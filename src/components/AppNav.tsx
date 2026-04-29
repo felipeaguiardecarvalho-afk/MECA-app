@@ -6,8 +6,11 @@ import { usePathname } from "next/navigation";
 
 export function AppNav() {
   const pathname = usePathname();
-  const onFundamentos = pathname === "/fundamentos";
-  const onArquetipos = pathname === "/arquetipos";
+  const onFundamentos =
+    pathname === "/fundamentos" || pathname.startsWith("/fundamentos/");
+  const onArquetipos =
+    pathname === "/arquetipos" || pathname.startsWith("/arquetipos/");
+  const onBlog = pathname === "/blog" || pathname.startsWith("/blog/");
 
   const tabClass = (active: boolean) =>
     [
@@ -44,6 +47,9 @@ export function AppNav() {
           <Link href="/arquetipos" className={tabClass(onArquetipos)}>
             Arquétipos
           </Link>
+          <Link href="/blog" className={tabClass(onBlog)}>
+            Biblioteca
+          </Link>
         </nav>
 
         {/* Desktop: centered tabs with auth on the right */}
@@ -65,6 +71,9 @@ export function AppNav() {
             </Link>
             <Link href="/arquetipos" className={tabClass(onArquetipos)}>
               Arquétipos
+            </Link>
+            <Link href="/blog" className={tabClass(onBlog)}>
+              Biblioteca
             </Link>
           </nav>
           <div className="flex min-w-[7rem] items-center justify-end justify-self-end">

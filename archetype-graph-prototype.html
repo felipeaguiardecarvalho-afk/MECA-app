@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arquétipo MECA — Protótipo 12 Arquétipos</title>
+  <title>Arquétipo MECA — Protótipo 14 Arquétipos</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -72,11 +72,11 @@
 </head>
 <body>
 
-<div class="badge">PROTÓTIPO — Engine com 12 arquétipos (ambiente de testes)</div>
+<div class="badge">PROTÓTIPO — Engine com 14 arquétipos (ambiente de testes)</div>
 
 <div class="card">
   <h2>Arquétipo MECA</h2>
-  <p class="subtitle">12 arquétipos posicionados nos eixos Capacidade × Direção e Sistema</p>
+  <p class="subtitle">14 arquétipos posicionados nos eixos Capacidade × Direção e Sistema</p>
 
   <div class="axis-top">↑ ALTA DIREÇÃO E SISTEMA</div>
 
@@ -104,6 +104,9 @@
       Performático Exausto     data x=50..88 y=24..50
       Executor Isolado         data x=54..99 y= 3..38
       Esforçado Perdido        data x=38..72 y=20..50  → NOVO (cruza limite inf esq/dir)
+      Arquiteto em Construção  data x=38..72 y=70..96  → NOVO (cruza limite sup esq/dir, topo)
+      O Adormecido             data x=28..56 y=28..56  → NOVO (cruza ambos eixos, inf esq central)
+      Profissional Invisível   data x= 2..38 y= 2..38  → REVISADO (restrito ao canto inf esq extremo)
     ══════════════════════════════════════════
     -->
     <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
@@ -174,9 +177,21 @@
               stroke-dasharray="7,2.5"/>
 
         <!-- ── BOTTOM-LEFT: Zona de Invisibilidade ── -->
-        <!-- Profissional Invisível: data x=2..45, y=3..44 -->
-        <rect x="10"  y="269" width="206" height="197" rx="9"
+        <!-- Profissional Invisível REVISADO: data x=2..38, y=2..38 → canto extremo inf esq -->
+        <rect x="10"  y="298" width="173" height="173" rx="9"
               fill="#c03040" fill-opacity="0.18" stroke="#c03040" stroke-width="1.8" stroke-opacity="0.70"/>
+
+        <!-- ── SPANNING top-left / top-right (topo) ── -->
+        <!-- Arquiteto em Construção (NOVO): data x=38..72, y=70..96 → cruza X=50 no topo -->
+        <rect x="182" y="19"  width="163" height="125" rx="9"
+              fill="#7040a8" fill-opacity="0.17" stroke="#7040a8" stroke-width="2"   stroke-opacity="0.75"
+              stroke-dasharray="7,2.5"/>
+
+        <!-- ── SPANNING all four borders around center ── -->
+        <!-- O Adormecido (NOVO): data x=28..56, y=28..56 → cruza X=50 e Y=50, inf esq central -->
+        <rect x="134" y="211" width="134" height="134" rx="9"
+              fill="#5a7088" fill-opacity="0.17" stroke="#5a7088" stroke-width="2"   stroke-opacity="0.72"
+              stroke-dasharray="7,2.5"/>
 
       </g>
 
@@ -268,11 +283,25 @@
       <text x="342" y="451" font-size="8.5" font-weight="700" fill="#a03808">   Isolado</text>
       <circle cx="367" cy="382" r="3.5" fill="#c84810" stroke="white" stroke-width="1.5"/>
 
-      <!-- 12. Profissional Invisível — lower-left of its rect -->
-      <rect x="13" y="428" width="104" height="34" rx="5" fill="white" fill-opacity="0.88"/>
-      <text x="17" y="440" font-size="8.5" font-weight="700" fill="#961828">👁 Profissional</text>
-      <text x="17" y="451" font-size="8.5" font-weight="700" fill="#961828">   Invisível</text>
-      <circle cx="113" cy="368" r="3.5" fill="#b82840" stroke="white" stroke-width="1.5"/>
+      <!-- 12. Profissional Invisível REVISADO — canto extremo, rect menor -->
+      <rect x="13" y="432" width="104" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="17" y="444" font-size="8.5" font-weight="700" fill="#961828">👁 Profissional</text>
+      <text x="17" y="455" font-size="8.5" font-weight="700" fill="#961828">   Invisível</text>
+      <circle cx="97" cy="384" r="3.5" fill="#b82840" stroke="white" stroke-width="1.5"/>
+
+      <!-- 13. Arquiteto em Construção (NOVO) — topo, cruza o eixo X=50 -->
+      <!-- rect svg x=182..345, y=19..144 | center (263, 81) -->
+      <rect x="185" y="24" width="106" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="189" y="36"  font-size="8.5" font-weight="700" fill="#7040a8">✦ Arquiteto em</text>
+      <text x="189" y="47"  font-size="8.5" font-weight="700" fill="#7040a8">   Construção</text>
+      <circle cx="263" cy="81" r="3.5" fill="#7040a8" stroke="white" stroke-width="1.5"/>
+
+      <!-- 14. O Adormecido (NOVO) — inf esq central, cruza X=50 e Y=50 -->
+      <!-- rect svg x=134..268, y=211..345 | center (201, 278) -->
+      <rect x="138" y="295" width="84" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="142" y="307" font-size="8.5" font-weight="700" fill="#5a7088">✦ O</text>
+      <text x="142" y="318" font-size="8.5" font-weight="700" fill="#5a7088">   Adormecido</text>
+      <circle cx="201" cy="278" r="3.5" fill="#5a7088" stroke="white" stroke-width="1.5"/>
 
       <!-- ════════════════════════════
            USER POSITION
@@ -333,6 +362,9 @@
     <div class="change-item"><strong>✦ Competente Desengajado</strong> — intersecção superior/inferior direito (cruza linha Y=50). A ≥ 65, C ≥ 55, E &lt; 50.</div>
     <div class="change-item"><strong>✦ Potencial Represado</strong> — esquerdo inferior tendendo ao superior (cruza linha Y=50). C ≥ 50, E ≥ 50, A &lt; 50, M &lt; 50.</div>
     <div class="change-item"><strong>✦ Esforçado Perdido</strong> — inferior esquerdo tendendo ao direito (cruza linha X=50). A ≥ 50, M ≥ 50, C &lt; 50, E &lt; 50.</div>
+    <div class="change-item"><strong>✦ Arquiteto em Construção</strong> — cruza o eixo X=50 no topo, preenchendo gap entre Estrategista Estagnado e Acelerado MECA. (C+E)/2 ≥ 70, A entre 45–70.</div>
+    <div class="change-item"><strong>✦ O Adormecido</strong> — faixa central do quadrante inferior esquerdo, cruza ambos os eixos, cobre transição entre Profissional Invisível e Zona de Transição. A entre 30–55, (C+E)/2 entre 30–55.</div>
+    <div class="change-item"><strong>Profissional Invisível REVISADO</strong> — restrito ao canto inferior esquerdo extremo. A &lt; 40, (C+E)/2 &lt; 40, nenhum pilar acima de 35.</div>
   </div>
 
   <!-- Legend -->

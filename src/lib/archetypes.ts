@@ -3,7 +3,7 @@
  *
  * LAYERS:
  *   1) GRAFICO (4 zonas) = posicionamento no plano (A × (C+E)/2)
- *   2) ARQUETIPOS (8 tipos) = interpretação psicométrica dos pilares
+ *   2) ARQUETIPOS (14 tipos) = interpretação psicométrica dos pilares
  *
  * Eixos do gráfico (conforme spec textual — X=Capacidade, Y=Direção e Sistema):
  *   X = Capacidade = A          (entrega · competência · execução)
@@ -15,15 +15,21 @@
  *   bottom-right (X ≥ 50, Y < 50) → Zona de Esforço Invisível
  *   bottom-left  (X < 50, Y < 50) → Zona de Invisibilidade
  *
- * Os 8 arquétipos:
- *   1. Executor Isolado          → Zona de Esforço Invisível
- *   2. Útil Sem Direção          → Potencial Desperdiçado (global: alto E + baixo M)
- *   3. Estrategista Estagnado    → Potencial Desperdiçado
- *   4. Protagonista Desalinhado  → Zona de Aceleração
- *   5. Profissional Invisível    → Zona de Invisibilidade
- *   6. Performático Exausto      → Zona de Esforço Invisível
- *   7. Bem-Quisto Estagnado      → Potencial Desperdiçado
- *   8. Acelerado MECA            → Zona de Aceleração (só se M,E,C,A ≥ 70)
+ * Os 14 arquétipos:
+ *   1.  Executor Isolado            → Zona de Esforço Invisível
+ *   2.  Útil Sem Direção            → Potencial Desperdiçado (alto E + baixo M)
+ *   3.  Estrategista Estagnado      → Potencial Desperdiçado
+ *   4.  Protagonista Desalinhado    → Zona de Aceleração
+ *   5.  Profissional Invisível      → Zona de Invisibilidade
+ *   6.  Performático Exausto        → Zona de Esforço Invisível
+ *   7.  Bem-Quisto Estagnado        → Potencial Desperdiçado
+ *   8.  Acelerado MECA              → Zona de Aceleração (só se M,E,C,A ≥ 80)
+ *   9.  Especialista Reconhecido    → Zona de Aceleração
+ *   10. Competente Desengajado      → Zona de Esforço Invisível
+ *   11. Potencial Represado         → Potencial Desperdiçado
+ *   12. Esforçado Perdido           → Zona de Esforço Invisível
+ *   13. Arquiteto em Construção     → Potencial Desperdiçado
+ *   14. O Adormecido                → Zona de Invisibilidade
  *
  * Regra de consistência: `getArchetype()` é a ÚNICA função que classifica.
  * Qualquer override manual é proibido — o motor de relatório, o PDF, o dashboard
@@ -45,7 +51,13 @@ export type ArchetypeKey =
   | "profissional_invisivel"
   | "performatico_exausto"
   | "bem_quisto_estagnado"
-  | "acelerado_meca";
+  | "acelerado_meca"
+  | "especialista_reconhecido"
+  | "competente_desengajado"
+  | "potencial_represado"
+  | "esforcado_perdido"
+  | "arquiteto_em_construcao"
+  | "adormecido";
 
 export type ZoneKey =
   | "aceleracao"
@@ -257,11 +269,107 @@ export const ARCHETYPES: Record<ArchetypeKey, ArchetypeDefinition> = {
     name: "Profissional Invisível",
     zone: "invisibilidade",
     icon: "👁",
-    diagnosis: "Você trabalha, mas não é percebido.",
-    mechanics: "Baixo engajamento e cultura.",
-    risk: "Estagnação prolongada.",
+    diagnosis: "Você trabalha, mas não é percebido — engajamento e leitura de contexto estão muito abaixo do mínimo.",
+    mechanics: "Engajamento e cultura extremamente baixos.",
+    risk: "Estagnação prolongada e desconexão total do sistema.",
     leverage: "Presença e visibilidade.",
     action_plan: ["Participar mais", "Se posicionar"],
+  },
+  especialista_reconhecido: {
+    key: "especialista_reconhecido",
+    name: "Especialista Reconhecido",
+    zone: "aceleracao",
+    icon: "🎯",
+    diagnosis:
+      "Você tem alta competência, bom engajamento e forte leitura de contexto, mas falta mentalidade de protagonismo para transformar reconhecimento em avanço real.",
+    mechanics: "Alto A + alto C + alto E com baixa M. Você é valorizado pelo que entrega, não pelo que lidera.",
+    risk: "Estabilizar no conforto de ser reconhecido sem assumir riscos que geram crescimento acelerado.",
+    leverage: "Mentalidade de protagonismo e iniciativa estratégica.",
+    action_plan: [
+      "Assumir projetos com risco calculado",
+      "Propor soluções sem esperar solicitação",
+      "Desenvolver postura de liderança além da especialidade",
+    ],
+  },
+  competente_desengajado: {
+    key: "competente_desengajado",
+    name: "Competente Desengajado",
+    zone: "esforco_invisivel",
+    icon: "🔌",
+    diagnosis:
+      "Você tem capacidade real e lê bem o ambiente, mas seu engajamento é baixo — o sistema percebe presença, não envolvimento.",
+    mechanics: "Alto A + alto C + baixo E. Competência existe, mas o vínculo com o contexto é superficial.",
+    risk: "Ser percebido como distante ou desinteressado, perdendo oportunidades de influência.",
+    leverage: "Engajamento genuíno e construção de relações estratégicas.",
+    action_plan: [
+      "Investir tempo em relações-chave",
+      "Comunicar interesse ativo nas iniciativas do time",
+      "Ampliar presença em discussões relevantes",
+    ],
+  },
+  potencial_represado: {
+    key: "potencial_represado",
+    name: "Potencial Represado",
+    zone: "invisibilidade",
+    icon: "🔒",
+    diagnosis:
+      "Você tem consciência do ambiente e alguma cultura organizacional, mas baixo engajamento e capacidade ainda em desenvolvimento travam sua evolução.",
+    mechanics: "Baixo E + baixo A + C moderado. Você entende o contexto, mas ainda não converteu isso em resultados visíveis.",
+    risk: "Permanecer no modo de observação sem transitar para execução e presença.",
+    leverage: "Engajamento ativo e desenvolvimento de capacidade técnica.",
+    action_plan: [
+      "Escolher uma área para aprofundar a competência",
+      "Aumentar presença e participação visível",
+      "Traduzir leitura de contexto em ação concreta",
+    ],
+  },
+  esforcado_perdido: {
+    key: "esforcado_perdido",
+    name: "Esforçado Perdido",
+    zone: "esforco_invisivel",
+    icon: "🌀",
+    diagnosis:
+      "Você tem energia e iniciativa, mas sem direção clara e sem sistema. O esforço existe, mas se perde antes de gerar impacto real.",
+    mechanics: "Alta M com baixo C e A ainda em desenvolvimento. Você age muito, mas sem orientação estratégica.",
+    risk: "Esforço sem resultados gera desgaste e perda de credibilidade.",
+    leverage: "Direção estratégica e desenvolvimento de competências práticas.",
+    action_plan: [
+      "Definir um objetivo de crescimento claro para os próximos 90 dias",
+      "Alinhar esforço com o que o sistema realmente valoriza",
+      "Desenvolver pelo menos uma competência técnica com consistência",
+    ],
+  },
+  arquiteto_em_construcao: {
+    key: "arquiteto_em_construcao",
+    name: "Arquiteto em Construção",
+    zone: "potencial_desperdicado",
+    icon: "🏗",
+    diagnosis:
+      "Você tem boa leitura de contexto, engajamento e está construindo direção, mas sua capacidade ainda não chegou ao nível de sua visão. A fundação está sendo montada.",
+    mechanics: "Alto C + alto E + A moderado. Você enxerga o caminho, mas o desenvolvimento de capacidade não acompanha o ritmo.",
+    risk: "A lacuna entre visão e execução gerar frustração ou perda de credibilidade.",
+    leverage: "Desenvolvimento de capacidade prática e consistência na entrega.",
+    action_plan: [
+      "Priorizar o desenvolvimento de uma competência de alto impacto",
+      "Reduzir o gap entre planejamento e execução",
+      "Transformar a sua visão em entregas concretas e mensuráveis",
+    ],
+  },
+  adormecido: {
+    key: "adormecido",
+    name: "O Adormecido",
+    zone: "invisibilidade",
+    icon: "💤",
+    diagnosis:
+      "Você está presente, mas não ativo. Seu engajamento e leitura de contexto estão baixos — o sistema não percebe sua presença como relevante.",
+    mechanics: "Baixo E + baixo C. A combinação paralisa o crescimento: sem conexão com o contexto e sem presença ativa.",
+    risk: "Estagnação prolongada e progressivo distanciamento das oportunidades disponíveis.",
+    leverage: "Ativação comportamental — engajamento e presença.",
+    action_plan: [
+      "Escolher uma relação-chave para investir atenção genuína",
+      "Participar de ao menos uma discussão relevante por semana com contribuição real",
+      "Mapear o ambiente e entender as regras informais do contexto",
+    ],
   },
 };
 
@@ -275,6 +383,12 @@ export const ARCHETYPE_ORDER: ArchetypeKey[] = [
   "performatico_exausto",
   "bem_quisto_estagnado",
   "acelerado_meca",
+  "especialista_reconhecido",
+  "competente_desengajado",
+  "potencial_represado",
+  "esforcado_perdido",
+  "arquiteto_em_construcao",
+  "adormecido",
 ];
 
 /** Nomes canônicos (estáveis para persistência e testes). */
@@ -320,33 +434,38 @@ export function computePositionZone(
 
 const HIGH = 60;
 const LOW = 40;
-const ACCELERATED_MIN = 70;
+const VERY_LOW = 30; // Limiar mais restritivo para Profissional Invisível
+const ACCELERATED_MIN = 80; // Todos os pilares precisam atingir este valor para Acelerado MECA
 
 const BAND_HIGH = (v: number) => v >= HIGH;
 const BAND_LOW = (v: number) => v <= LOW;
+const BAND_VERY_LOW = (v: number) => v <= VERY_LOW;
 
 /**
  * Classifica o arquétipo a partir dos 4 pilares.
  *
  * Prioridade (primeira regra verdadeira vence):
- *   1) Acelerado MECA              — min(M,E,C,A) ≥ 70
- *   2) Útil Sem Direção            — alto E + baixo M
- *   3) Bem-Quisto Estagnado        — alto E + alto C + baixo A
- *   4) Estrategista Estagnado      — alto C + baixo A
- *   5) Protagonista Desalinhado    — alto M + alto A + baixo C + E não-baixo
- *                                    (Y ainda alto porque E compensa C)
- *   6) Performático Exausto        — alto A + alto M + (baixo E OU baixo C)
- *   7) Executor Isolado            — alto A + baixo E
- *   8) Profissional Invisível      — baixo E + baixo C
+ *   1)  Acelerado MECA              — min(M,E,C,A) ≥ 80
+ *   2)  Especialista Reconhecido    — alto A + alto C + alto E
+ *   3)  Útil Sem Direção            — alto E + baixo M
+ *   4)  Bem-Quisto Estagnado        — alto E + alto C + baixo A
+ *   5)  Arquiteto em Construção     — alto C + alto E + A não-alto e não-baixo (moderado)
+ *   6)  Estrategista Estagnado      — alto C + baixo A
+ *   7)  Protagonista Desalinhado    — alto M + alto A + baixo C + E não-baixo
+ *   8)  Performático Exausto        — alto A + alto M + (baixo E OU baixo C)
+ *   9)  Competente Desengajado      — alto A + alto C + baixo E
+ *   10) Executor Isolado            — alto A + baixo E
+ *   11) Esforçado Perdido           — alto M + baixo C + A não-alto
+ *   12) Potencial Represado         — baixo E + C não-baixo + A não-alto
+ *   13) Profissional Invisível      — E muito baixo + C muito baixo (limiar 30)
+ *   14) O Adormecido                — baixo E + baixo C (fallback zona de invisibilidade)
  *
- * Fallback (nenhuma regra aplicável): prioriza pilar mais fraco em zonas cinzas
- * e usa distância euclidiana para protótipos como segunda camada.
- * Na zona de aceleração (gráfico), Acelerado MECA só entra pela regra 1.
- * Em empate de desequilíbrios → prioridade acima resolve (dominância por ordem).
+ * Fallback (nenhuma regra aplicável): distância euclidiana para protótipos.
  */
 export function classifyArchetype(scores: MECAScores): ArchetypeKey {
   const { M, E, C, A } = scores;
 
+  // 1. Acelerado MECA — exige equilíbrio máximo em todos os pilares
   if (
     M >= ACCELERATED_MIN &&
     E >= ACCELERATED_MIN &&
@@ -356,28 +475,63 @@ export function classifyArchetype(scores: MECAScores): ArchetypeKey {
     return "acelerado_meca";
   }
 
+  // 2. Especialista Reconhecido — alto A + alto C + alto E (falta protagonismo em M)
+  if (BAND_HIGH(A) && BAND_HIGH(C) && BAND_HIGH(E)) {
+    return "especialista_reconhecido";
+  }
+
+  // 3. Útil Sem Direção — alto E + baixo M
   if (BAND_HIGH(E) && BAND_LOW(M)) return "util_sem_direcao";
 
+  // 4. Bem-Quisto Estagnado — alto E + alto C + baixo A
   if (BAND_HIGH(E) && BAND_HIGH(C) && BAND_LOW(A)) {
     return "bem_quisto_estagnado";
   }
 
+  // 5. Arquiteto em Construção — alto C + alto E + A moderado (nem alto nem baixo)
+  //    (casos com A baixo já foram capturados pela regra 4)
+  if (BAND_HIGH(C) && BAND_HIGH(E) && !BAND_HIGH(A)) {
+    return "arquiteto_em_construcao";
+  }
+
+  // 6. Estrategista Estagnado — alto C + baixo A
   if (BAND_HIGH(C) && BAND_LOW(A)) return "estrategista_estagnado";
 
-  // Protagonista Desalinhado precisa vir ANTES de Performático porque ambos
-  // casam com (alto M + alto A + baixo C). Diferencial: E não pode ser baixo
-  // (E alto mantém o eixo Y na metade superior → Zona de Aceleração).
+  // 7. Protagonista Desalinhado — alto M + alto A + baixo C + E não-baixo
+  //    (E alto mantém o eixo Y na metade superior → Zona de Aceleração)
   if (BAND_HIGH(M) && BAND_HIGH(A) && BAND_LOW(C) && !BAND_LOW(E)) {
     return "protagonista_desalinhado";
   }
 
+  // 8. Performático Exausto — alto A + alto M + (baixo E OU baixo C)
   if (BAND_HIGH(A) && BAND_HIGH(M) && (BAND_LOW(E) || BAND_LOW(C))) {
     return "performatico_exausto";
   }
 
+  // 9. Competente Desengajado — alto A + alto C + baixo E
+  if (BAND_HIGH(A) && BAND_HIGH(C) && BAND_LOW(E)) {
+    return "competente_desengajado";
+  }
+
+  // 10. Executor Isolado — alto A + baixo E
   if (BAND_HIGH(A) && BAND_LOW(E)) return "executor_isolado";
 
-  if (BAND_LOW(E) && BAND_LOW(C)) return "profissional_invisivel";
+  // 11. Esforçado Perdido — alto M + baixo C + A não-alto (esforço sem direção e sem capacidade consolidada)
+  if (BAND_HIGH(M) && BAND_LOW(C) && !BAND_HIGH(A)) {
+    return "esforcado_perdido";
+  }
+
+  // 12. Potencial Represado — baixo E + C não-baixo + A não-alto
+  //     (tem leitura de contexto mas baixo engajamento e capacidade em desenvolvimento)
+  if (BAND_LOW(E) && !BAND_LOW(C) && !BAND_HIGH(A)) {
+    return "potencial_represado";
+  }
+
+  // 13. Profissional Invisível — E e C extremamente baixos (limiar 30, mais restritivo)
+  if (BAND_VERY_LOW(E) && BAND_VERY_LOW(C)) return "profissional_invisivel";
+
+  // 14. O Adormecido — baixo E + baixo C (não extremo — captura a zona central-baixa)
+  if (BAND_LOW(E) && BAND_LOW(C)) return "adormecido";
 
   // Fallback: nearest-neighbor com guardrails para preservar semântica editorial.
   return nearestArchetypeByDistance(scores);
@@ -393,13 +547,19 @@ const FALLBACK_PROTOTYPES: Record<
   Exclude<ArchetypeKey, "acelerado_meca">,
   MECAScores
 > = {
-  util_sem_direcao: { M: 30, E: 80, C: 55, A: 50 },
-  bem_quisto_estagnado: { M: 55, E: 80, C: 80, A: 30 },
-  estrategista_estagnado: { M: 55, E: 55, C: 80, A: 30 },
-  protagonista_desalinhado: { M: 80, E: 65, C: 30, A: 80 },
-  performatico_exausto: { M: 80, E: 30, C: 30, A: 80 },
-  executor_isolado: { M: 55, E: 30, C: 55, A: 80 },
-  profissional_invisivel: { M: 35, E: 30, C: 30, A: 35 },
+  util_sem_direcao:          { M: 30, E: 80, C: 55, A: 50 },
+  bem_quisto_estagnado:      { M: 55, E: 80, C: 80, A: 30 },
+  estrategista_estagnado:    { M: 55, E: 55, C: 80, A: 30 },
+  protagonista_desalinhado:  { M: 80, E: 65, C: 30, A: 80 },
+  performatico_exausto:      { M: 80, E: 30, C: 30, A: 80 },
+  executor_isolado:          { M: 55, E: 30, C: 55, A: 80 },
+  profissional_invisivel:    { M: 35, E: 20, C: 20, A: 35 },
+  especialista_reconhecido:  { M: 50, E: 70, C: 75, A: 75 },
+  competente_desengajado:    { M: 50, E: 25, C: 70, A: 75 },
+  potencial_represado:       { M: 50, E: 30, C: 50, A: 30 },
+  esforcado_perdido:         { M: 75, E: 35, C: 25, A: 45 },
+  arquiteto_em_construcao:   { M: 55, E: 70, C: 75, A: 50 },
+  adormecido:                { M: 35, E: 30, C: 35, A: 40 },
 };
 
 type FallbackKey = keyof typeof FALLBACK_PROTOTYPES;
@@ -422,6 +582,18 @@ function isSemanticallyValidFallback(key: FallbackKey, s: MECAScores): boolean {
     case "executor_isolado":
       return high(s.A) && low(s.E);
     case "profissional_invisivel":
+      return s.E <= VERY_LOW && s.C <= VERY_LOW;
+    case "especialista_reconhecido":
+      return high(s.A) && high(s.C) && high(s.E);
+    case "competente_desengajado":
+      return high(s.A) && high(s.C) && low(s.E);
+    case "potencial_represado":
+      return low(s.E) && !low(s.C) && !high(s.A);
+    case "esforcado_perdido":
+      return high(s.M) && low(s.C) && !high(s.A);
+    case "arquiteto_em_construcao":
+      return high(s.C) && high(s.E) && !high(s.A);
+    case "adormecido":
       return low(s.E) && low(s.C);
   }
 }
@@ -452,7 +624,7 @@ function nearestArchetypeByDistance(scores: MECAScores): ArchetypeKey {
 
   if (best) return best;
 
-  // Sem candidato válido pelos guardrails: usa o mais próximo entre os 7.
+  // Sem candidato válido pelos guardrails: usa o mais próximo entre todos.
   for (const key of Object.keys(FALLBACK_PROTOTYPES) as FallbackKey[]) {
     const d = sqDist(scores, FALLBACK_PROTOTYPES[key]);
     if (d < bestDist) {
@@ -461,7 +633,7 @@ function nearestArchetypeByDistance(scores: MECAScores): ArchetypeKey {
     }
   }
 
-  return best ?? "profissional_invisivel";
+  return best ?? "adormecido";
 }
 
 function fallbackByWeakestPilar(scores: MECAScores): ArchetypeKey | null {
@@ -473,16 +645,17 @@ function fallbackByWeakestPilar(scores: MECAScores): ArchetypeKey | null {
     computeDirectionAxis(scores),
   );
 
-  // Empate no menor pilar: usa uma âncora estável por zona.
+  // Empate no menor pilar: usa âncora estável por zona.
   if (countMin > 1) {
     switch (zone) {
       case "aceleracao":
+        return "especialista_reconhecido";
       case "potencial_desperdicado":
-        return "util_sem_direcao";
+        return "arquiteto_em_construcao";
       case "esforco_invisivel":
         return "executor_isolado";
       case "invisibilidade":
-        return "profissional_invisivel";
+        return "adormecido";
     }
   }
 

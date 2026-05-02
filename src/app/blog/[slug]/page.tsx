@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FAQSection } from "@/components/blog/FAQSection";
 import { formatBlogDate, getAllBlogPosts, getBlogPost } from "@/lib/blog";
 
 type BlogArticlePageProps = {
@@ -98,6 +99,8 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
             className="mt-8 space-y-6 rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm shadow-slate-900/5 sm:p-8"
             dangerouslySetInnerHTML={{ __html: post.html }}
           />
+
+          {post.slug === "o-que-e-o-metodo-meca" ? <FAQSection /> : null}
         </div>
       </div>
     </article>

@@ -197,7 +197,7 @@ export const ARCHETYPE_PAGE_CONTENT: Record<ArchetypeKey, ArchetypePageContent> 
       diagnosis:
         "Você tem alta competência técnica, bom engajamento com o ambiente e forte leitura de contexto. Você é valorizado e reconhecido pelo que entrega. Mas há uma lacuna de protagonismo — você ainda não transformou esse reconhecimento em liderança de impacto e crescimento acelerado.",
       mechanics:
-        "Alto A + alto C + alto E com M abaixo do necessário para liderar mudanças. Você é o profissional em quem o sistema confia para executar, mas raramente para liderar.",
+        "Esse padrão surge quando a organização já confia no que você entrega e em como você lê o ambiente, mas ainda não te enxerga como quem puxa mudanças. Performance, cultura e engajamento estão altos; falta a camada de protagonismo que converte reconhecimento em influência e próximo nível.",
       risk:
         "Estabilizar no conforto de ser reconhecido sem assumir os riscos que geram o próximo nível de crescimento.",
       leverage: "Mentalidade de protagonismo e iniciativa estratégica.",
@@ -215,7 +215,7 @@ export const ARCHETYPE_PAGE_CONTENT: Record<ArchetypeKey, ArchetypePageContent> 
       diagnosis:
         "Você tem capacidade real, lê bem o ambiente e entrega resultados consistentes, mas seu engajamento com o contexto é baixo. O sistema percebe sua presença técnica, mas não sente seu envolvimento. Isso cria uma lacuna entre o que você pode gerar e o que efetivamente é percebido.",
       mechanics:
-        "Alto A + alto C + baixo E. A competência existe, mas a conexão com o sistema é superficial. Você entrega, mas não se conecta.",
+        "Surge quando capacidade e leitura de contexto existem, mas o envolvimento com pessoas e iniciativas permanece raso. Você é visto como capaz, porém distante — a entrega não se traduz em presença viva nem em vínculo estratégico com o que o sistema prioriza.",
       risk:
         "Ser percebido como distante, desinteressado ou difícil de envolver — e perder oportunidades de influência e crescimento por isso.",
       leverage: "Engajamento genuíno e construção de relações estratégicas.",
@@ -233,7 +233,7 @@ export const ARCHETYPE_PAGE_CONTENT: Record<ArchetypeKey, ArchetypePageContent> 
       diagnosis:
         "Você tem consciência do ambiente, lê algumas dinâmicas do contexto e entende o que precisa acontecer, mas baixo engajamento e capacidade ainda em desenvolvimento impedem que você converta esse entendimento em avanço real. O potencial existe, mas está represado.",
       mechanics:
-        "Baixo E + baixo A + C moderado. Você observa mais do que age. Sua leitura de contexto não se traduz em execução ou presença relevante.",
+        "Acontece quando você enxerga parte do jogo, mas engajamento e performance ainda não sustentam a conversão em avanço. A percepção fica na observação; o sistema ainda não associa seu nome a entregas e presença que comprovem o potencial que você intui.",
       risk:
         "Permanecer no modo de observação indefinidamente, perdendo o timing das oportunidades que percebe mas não aproveita.",
       leverage: "Engajamento ativo e desenvolvimento consistente de capacidade técnica.",
@@ -251,7 +251,7 @@ export const ARCHETYPE_PAGE_CONTENT: Record<ArchetypeKey, ArchetypePageContent> 
       diagnosis:
         "Você tem energia, iniciativa e disposição para agir. O esforço é real e visível. Mas falta direção estratégica e leitura de contexto para que esse esforço se converta em impacto. Você trabalha muito, mas frequentemente nos lugares errados ou sem o sistema necessário para escalar.",
       mechanics:
-        "Alta M com baixo C e A ainda em desenvolvimento. Você age antes de entender e executa sem o mapa do ambiente. O esforço existe, mas se perde antes de gerar resultado.",
+        "Combina iniciativa e disposição para agir com leitura de contexto e performance ainda instáveis. Você se movimenta antes de consolidar direção e execução — o esforço aparece, mas dilui-se sem mapa claro do ambiente nem sustentação técnica que converta movimento em impacto percebido.",
       risk:
         "Desgaste sem crescimento visível. Esforço desalinhado gera perda de credibilidade mesmo para quem tem boa intenção.",
       leverage: "Direção estratégica e desenvolvimento de competências práticas com foco.",
@@ -269,7 +269,7 @@ export const ARCHETYPE_PAGE_CONTENT: Record<ArchetypeKey, ArchetypePageContent> 
       diagnosis:
         "Você tem boa leitura de contexto, engajamento ativo e está construindo uma direção clara. A visão existe e o sistema percebe seu alinhamento. O que falta é que sua capacidade técnica ainda não chegou ao nível da sua visão. Você está montando a fundação — mas a estrutura precisa se sustentar.",
       mechanics:
-        "Alto C + alto E + A moderado. Você enxerga o caminho e engaja com o ambiente, mas o desenvolvimento de capacidade não acompanha o ritmo da sua intenção.",
+        "Reflete boa leitura de contexto e engajamento real com prioridades, enquanto a entrega mensurável ainda não acompanha o ritmo da visão. Você constrói narrativa e relação, mas o ecossistema ainda espera prova contínua de impacto — a intenção está à frente da capacidade consolidada.",
       risk:
         "A lacuna entre visão e execução pode gerar frustração interna e perda de credibilidade externa se não for reduzida com consistência.",
       leverage: "Desenvolvimento de capacidade prática e consistência na entrega.",
@@ -287,7 +287,7 @@ export const ARCHETYPE_PAGE_CONTENT: Record<ArchetypeKey, ArchetypePageContent> 
       diagnosis:
         "Você está presente no ambiente, mas não ativo dentro dele. Seu engajamento com o sistema e sua leitura de contexto estão baixos — o que faz com que sua presença não seja percebida como relevante. Você ocupa espaço, mas não gera movimento.",
       mechanics:
-        "Baixo E + baixo C. Sem conexão ativa com o ambiente e sem presença visível, o crescimento não encontra tração. Não é ausência de capacidade — é ausência de ativação.",
+        "Indica presença formal com baixíssimo envolvimento e pouca penetração cultural no ambiente. Sem engajamento nem leitura ativa, o crescimento não encontra gancho — não é ausência de talento bruto, é ausência de ativação: você ocupa espaço, mas o sistema não sente movimento nem contribuição estratégica.",
       risk:
         "Estagnação prolongada e distanciamento progressivo das oportunidades. O sistema tende a ignorar quem não aparece.",
       leverage: "Ativação comportamental — engajamento e presença como ponto de partida.",

@@ -288,7 +288,8 @@ export const ARCHETYPES: Record<ArchetypeKey, ArchetypeDefinition> = {
     icon: "🎯",
     diagnosis:
       "Você tem alta competência, bom engajamento e forte leitura de contexto, mas falta mentalidade de protagonismo para transformar reconhecimento em avanço real.",
-    mechanics: "Alto A + alto C + alto E com baixa M. Você é valorizado pelo que entrega, não pelo que lidera.",
+    mechanics:
+      "Alta performance, cultura e engajamento, com mentalidade ainda mais voltada à execução do que à liderança de mudança.",
     risk: "Estabilizar no conforto de ser reconhecido sem assumir riscos que geram crescimento acelerado.",
     leverage: "Mentalidade de protagonismo e iniciativa estratégica.",
     action_plan: [
@@ -304,7 +305,8 @@ export const ARCHETYPES: Record<ArchetypeKey, ArchetypeDefinition> = {
     icon: "🔌",
     diagnosis:
       "Você tem capacidade real e lê bem o ambiente, mas seu engajamento é baixo — o sistema percebe presença, não envolvimento.",
-    mechanics: "Alto A + alto C + baixo E. Competência existe, mas o vínculo com o contexto é superficial.",
+    mechanics:
+      "Alta performance e leitura de contexto com engajamento aquém da capacidade — entrega sólida, conexão fraca com o jogo.",
     risk: "Ser percebido como distante ou desinteressado, perdendo oportunidades de influência.",
     leverage: "Engajamento genuíno e construção de relações estratégicas.",
     action_plan: [
@@ -320,7 +322,8 @@ export const ARCHETYPES: Record<ArchetypeKey, ArchetypeDefinition> = {
     icon: "🔒",
     diagnosis:
       "Você tem consciência do ambiente e alguma cultura organizacional, mas baixo engajamento e capacidade ainda em desenvolvimento travam sua evolução.",
-    mechanics: "Baixo E + baixo A + C moderado. Você entende o contexto, mas ainda não converteu isso em resultados visíveis.",
+    mechanics:
+      "Cultura moderada sem engajamento nem performance suficientes para transformar percepção em resultado visível.",
     risk: "Permanecer no modo de observação sem transitar para execução e presença.",
     leverage: "Engajamento ativo e desenvolvimento de capacidade técnica.",
     action_plan: [
@@ -336,7 +339,8 @@ export const ARCHETYPES: Record<ArchetypeKey, ArchetypeDefinition> = {
     icon: "🌀",
     diagnosis:
       "Você tem energia e iniciativa, mas sem direção clara e sem sistema. O esforço existe, mas se perde antes de gerar impacto real.",
-    mechanics: "Alta M com baixo C e A ainda em desenvolvimento. Você age muito, mas sem orientação estratégica.",
+    mechanics:
+      "Mentalidade ativa com leitura de contexto e performance ainda em construção — muita energia, pouco alinhamento.",
     risk: "Esforço sem resultados gera desgaste e perda de credibilidade.",
     leverage: "Direção estratégica e desenvolvimento de competências práticas.",
     action_plan: [
@@ -352,7 +356,8 @@ export const ARCHETYPES: Record<ArchetypeKey, ArchetypeDefinition> = {
     icon: "🏗",
     diagnosis:
       "Você tem boa leitura de contexto, engajamento e está construindo direção, mas sua capacidade ainda não chegou ao nível de sua visão. A fundação está sendo montada.",
-    mechanics: "Alto C + alto E + A moderado. Você enxerga o caminho, mas o desenvolvimento de capacidade não acompanha o ritmo.",
+    mechanics:
+      "Forte cultura e engajamento com performance ainda desenvolvendo — visão e presença à frente da entrega mensurável.",
     risk: "A lacuna entre visão e execução gerar frustração ou perda de credibilidade.",
     leverage: "Desenvolvimento de capacidade prática e consistência na entrega.",
     action_plan: [
@@ -368,7 +373,8 @@ export const ARCHETYPES: Record<ArchetypeKey, ArchetypeDefinition> = {
     icon: "💤",
     diagnosis:
       "Você está presente, mas não ativo. Seu engajamento e leitura de contexto estão baixos — o sistema não percebe sua presença como relevante.",
-    mechanics: "Baixo E + baixo C. A combinação paralisa o crescimento: sem conexão com o contexto e sem presença ativa.",
+    mechanics:
+      "Engajamento e leitura de contexto muito baixos — presença formal sem presença estratégica no sistema.",
     risk: "Estagnação prolongada e progressivo distanciamento das oportunidades disponíveis.",
     leverage: "Ativação comportamental — engajamento e presença.",
     action_plan: [

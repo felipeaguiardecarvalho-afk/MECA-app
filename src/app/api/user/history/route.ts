@@ -189,11 +189,42 @@ export async function GET(request: NextRequest) {
       const service = getServiceRoleClientOrNull();
       const devId = devAnonymousUserId();
       if (!service || !devId) {
+        // SMOKE-TEST SEED: em e2e sem Supabase, devolve um diagnóstico
+        // sintético para popular o dashboard. Remover quando staging estiver
+        // disponível.
+        const now = new Date().toISOString();
+        const seedAnswers: Record<string, number> = {};
+        for (let i = 1; i <= 60; i++) seedAnswers[String(i)] = 4;
+        const seedRow: HistoryRow = {
+          id: "smoke-seed-1",
+          user_id: "00000000-0000-0000-0000-000000000000",
+          created_at: now,
+          mentalidade: 72,
+          engajamento: 45,
+          cultura: 78,
+          performance: 58,
+          direction: 61.5,
+          capacity: 58,
+          archetype: "Potencial Represado",
+          answers: seedAnswers,
+        };
+        const seedRow2: HistoryRow = {
+          id: "smoke-seed-2",
+          user_id: "00000000-0000-0000-0000-000000000000",
+          created_at: new Date(Date.now() - 7 * 86_400_000).toISOString(),
+          mentalidade: 50,
+          engajamento: 50,
+          cultura: 50,
+          performance: 50,
+          direction: 50,
+          capacity: 50,
+          archetype: "Especialista Reconhecido",
+          answers: seedAnswers,
+        };
         return NextResponse.json({
           ok: true,
           viewer: { role: "user" } satisfies HistoryViewer,
-          rows: [],
-          offline: true,
+          rows: [seedRow, seedRow2],
         });
       }
 

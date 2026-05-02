@@ -101,13 +101,15 @@ export const ArchetypeCard: React.FC<Props> = ({ archetype, scores, onActionPlan
             style={{
               fontSize: 10,
               fontWeight: 700,
-              color: "#6b7280",
+              color: archetype.isFallback ? "#7a4ca0" : "#6b7280",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               marginBottom: 3,
             }}
           >
-            {archetype.zoneLabel}
+            {archetype.isFallback
+              ? `Arquétipo mais próximo · ${archetype.zoneLabel}`
+              : archetype.zoneLabel}
           </div>
           <div
             style={{
@@ -116,15 +118,44 @@ export const ArchetypeCard: React.FC<Props> = ({ archetype, scores, onActionPlan
               color: archetype.textColor,
               letterSpacing: "-0.4px",
               lineHeight: 1.15,
+              opacity: archetype.isFallback ? 0.85 : 1,
             }}
           >
             {archetype.name}
           </div>
+          {archetype.isFallback ? (
+            <div
+              style={{
+                marginTop: 6,
+                display: "inline-block",
+                padding: "3px 9px",
+                fontSize: 10.5,
+                fontWeight: 700,
+                color: "#6b21a8",
+                background: "#f3e8ff",
+                border: "1px solid #d8b4fe",
+                borderRadius: 999,
+                letterSpacing: "0.04em",
+              }}
+            >
+              Perfil em transição
+            </div>
+          ) : null}
         </div>
       </div>
 
       <div style={{ padding: "22px 26px" }}>
-        <Section label="Diagnóstico">{report.diagnosis}</Section>
+        {archetype.isFallback ? (
+          <Section label="Status" accent="#7a4ca0">
+            Seu perfil atual <strong>não satisfaz estritamente</strong> as condições
+            de nenhum arquétipo. As leituras abaixo são uma <strong>tendência</strong>{" "}
+            (perfil mais próximo: {archetype.name}). Reforçar pilares específicos
+            estabilizará a classificação.
+          </Section>
+        ) : null}
+        <Section label={archetype.isFallback ? "Diagnóstico (aproximado)" : "Diagnóstico"}>
+          {report.diagnosis}
+        </Section>
         <Section label="Mecânica">{report.mechanics}</Section>
         <Section label="Risco" accent="#c53030">
           {report.risk}

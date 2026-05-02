@@ -14,7 +14,7 @@ export default function ArquetiposPage() {
             Arquétipos MECA
           </h1>
           <p className="mx-auto mt-2 max-w-2xl text-pretty text-base leading-relaxed text-slate-600 sm:text-lg">
-            Os 8 perfis comportamentais que explicam seu momento de carreira
+            Os 14 perfis comportamentais que explicam seu momento de carreira
             com base nos pilares do MECA.
           </p>
         </header>

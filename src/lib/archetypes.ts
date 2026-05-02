@@ -116,6 +116,12 @@ export interface ArchetypeResult {
   /** Pilar de menor pontuação (ponto de atenção). */
   weakestPilar: keyof MECAScores;
   weakestPilarName: string;
+  /**
+   * `true` quando NENHUMA regra (R1–R14) disparou e o arquétipo veio do fallback
+   * por nearest-neighbor. UI deve sinalizar visualmente — o ponto não cai dentro
+   * do retângulo rule-space do arquétipo nominalmente classificado.
+   */
+  isFallback: boolean;
   report: ArchetypeReport;
 }
 
@@ -432,10 +438,13 @@ export function computePositionZone(
 // CLASSIFICAÇÃO (regras determinísticas)
 // --------------------------------------------------------------------------
 
-const HIGH = 60;
-const LOW = 40;
-const VERY_LOW = 30; // Limiar mais restritivo para Profissional Invisível
-const ACCELERATED_MIN = 80; // Todos os pilares precisam atingir este valor para Acelerado MECA
+// Thresholds das bandas de classificação. Exportados para que o gráfico
+// (ArchetypeMatrix) derive os bounds dos retângulos diretamente das mesmas
+// constantes — evita drift entre engine e UI.
+export const HIGH = 60;
+export const LOW = 40;
+export const VERY_LOW = 30; // Limiar mais restritivo para Profissional Invisível
+export const ACCELERATED_MIN = 80; // Todos os pilares precisam atingir este valor para Acelerado MECA
 
 const BAND_HIGH = (v: number) => v >= HIGH;
 const BAND_LOW = (v: number) => v <= LOW;
@@ -462,6 +471,42 @@ const BAND_VERY_LOW = (v: number) => v <= VERY_LOW;
  *
  * Fallback (nenhuma regra aplicável): distância euclidiana para protótipos.
  */
+/**
+ * Tenta classificar usando apenas as 14 regras determinísticas.
+ * Retorna `null` quando nenhuma regra dispara — chamador decide se aplica fallback.
+ */
+export function classifyByRule(scores: MECAScores): ArchetypeKey | null {
+  const { M, E, C, A } = scores;
+
+  if (
+    M >= ACCELERATED_MIN &&
+    E >= ACCELERATED_MIN &&
+    C >= ACCELERATED_MIN &&
+    A >= ACCELERATED_MIN
+  ) return "acelerado_meca";
+  if (BAND_HIGH(A) && BAND_HIGH(C) && BAND_HIGH(E)) return "especialista_reconhecido";
+  if (BAND_HIGH(E) && BAND_LOW(M)) return "util_sem_direcao";
+  if (BAND_HIGH(E) && BAND_HIGH(C) && BAND_LOW(A)) return "bem_quisto_estagnado";
+  if (BAND_HIGH(C) && BAND_HIGH(E) && !BAND_HIGH(A)) return "arquiteto_em_construcao";
+  if (BAND_HIGH(C) && BAND_LOW(A)) return "estrategista_estagnado";
+  if (BAND_HIGH(M) && BAND_HIGH(A) && BAND_LOW(C) && !BAND_LOW(E))
+    return "protagonista_desalinhado";
+  if (BAND_HIGH(A) && BAND_HIGH(M) && (BAND_LOW(E) || BAND_LOW(C)))
+    return "performatico_exausto";
+  if (BAND_HIGH(A) && BAND_HIGH(C) && BAND_LOW(E)) return "competente_desengajado";
+  if (BAND_HIGH(A) && BAND_LOW(E)) return "executor_isolado";
+  if (BAND_HIGH(M) && BAND_LOW(C) && !BAND_HIGH(A)) return "esforcado_perdido";
+  if (BAND_LOW(E) && !BAND_LOW(C) && !BAND_HIGH(A)) return "potencial_represado";
+  if (BAND_VERY_LOW(E) && BAND_VERY_LOW(C)) return "profissional_invisivel";
+  if (BAND_LOW(E) && BAND_LOW(C)) return "adormecido";
+  return null;
+}
+
+/** `true` quando o caso cai no fallback nearest-neighbor (nenhuma regra disparou). */
+export function isFallbackScore(scores: MECAScores): boolean {
+  return classifyByRule(scores) === null;
+}
+
 export function classifyArchetype(scores: MECAScores): ArchetypeKey {
   const { M, E, C, A } = scores;
 
@@ -701,6 +746,7 @@ export function getArchetype(scores: MECAScores): ArchetypeResult {
     icon: def.icon,
     weakestPilar: w,
     weakestPilarName: PILAR_NAMES[w],
+    isFallback: classifyByRule(scores) === null,
     report: {
       diagnosis: def.diagnosis,
       mechanics: def.mechanics,

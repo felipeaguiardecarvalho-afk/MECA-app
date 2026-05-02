@@ -1,6 +1,7 @@
 "use client";
 
 import { getActionPlan } from "@/lib/action-plan";
+import { getArchetype } from "@/lib/archetypes";
 import { diagnosticRowToMECAScores } from "@/lib/meca-scores";
 import {
   pickLatestRow,
@@ -64,10 +65,11 @@ export function PlanoDeAcaoClient() {
     void fetchHistory();
   }, [fetchHistory, saved]);
 
-  const plan = useMemo(
-    () => (scores ? getActionPlan(scores, answers) : null),
-    [answers, scores],
-  );
+  const plan = useMemo(() => {
+    if (!scores) return null;
+    const archetype = getArchetype(scores);
+    return getActionPlan(scores, answers, { isFallback: archetype.isFallback });
+  }, [answers, scores]);
 
   if (loading && !scores) {
     return (

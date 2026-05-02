@@ -1,3 +1,4 @@
+import { logAdminAction } from "@/lib/admin-audit-log";
 import { isAuthDisabled } from "@/lib/auth-mode";
 import { requireAdminWithMfa } from "@/lib/auth/require-admin-mfa";
 import { logger } from "@/lib/logger";
@@ -134,6 +135,18 @@ export async function GET() {
       "Bem-Quisto Estagnado", "Acelerado MECA",
     ];
     const newArchetypesHit = Object.keys(newDist).filter(n => !LEGACY_8.includes(n));
+
+    await logAdminAction({
+      action: "validate_archetypes",
+      adminUserId: guard.user.id,
+      adminEmail: guard.user.email ?? null,
+      metadata: {
+        total,
+        archetype_changed: archetypeChanged,
+        errors,
+        new_archetypes_hit: newArchetypesHit,
+      },
+    });
 
     return NextResponse.json({
       ok: true,

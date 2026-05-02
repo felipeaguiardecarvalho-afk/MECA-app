@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arquétipo MECA — Protótipo 14 Arquétipos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 28px 16px 48px; gap: 10px;
+    }
+    .badge {
+      background: #fef3c7; color: #92400e;
+      border: 1px solid #fcd34d; border-radius: 6px;
+      padding: 5px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    }
+    .card {
+      background: white; border-radius: 16px;
+      padding: 24px 20px 18px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      width: 100%; max-width: 580px;
+    }
+    h2 { color: #1a3a5c; font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+    .subtitle { color: #6b7280; font-size: 12px; margin-bottom: 16px; }
+    .axis-top, .axis-bottom {
+      text-align: center; font-size: 10px; font-weight: 700;
+      color: #1a3a5c; letter-spacing: 0.05em;
+    }
+    .axis-top { margin-bottom: 5px; }
+    .axis-bottom { margin-top: 5px; }
+    .graph-row { display: flex; align-items: center; gap: 3px; }
+    .axis-vert {
+      font-size: 9px; font-weight: 700; color: #1a3a5c;
+      writing-mode: vertical-rl; letter-spacing: 0.04em;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .axis-vert.left { transform: rotate(180deg); }
+    svg { flex: 1; border-radius: 8px; border: 1px solid #cbd5e1; display: block; }
+    .scores {
+      display: flex; border-radius: 8px; overflow: hidden;
+      border: 1px solid #e5e7eb; margin-top: 12px;
+    }
+    .score-item {
+      flex: 1; background: #f8fafc; padding: 9px 6px;
+      text-align: center; border-right: 1px solid #e5e7eb;
+    }
+    .score-item:last-child { border-right: none; flex: 1.3; }
+    .sl { font-size: 10px; color: #6b7280; margin-bottom: 2px; }
+    .sv { font-size: 17px; font-weight: 800; color: #1a3a5c; }
+    .su { font-size: 10px; font-weight: 500; color: #9ca3af; }
+    .arch-name { font-size: 12px; font-weight: 800; color: #1a3a5c; line-height: 1.2; }
+    .legend {
+      background: #f8fafc; border: 1px solid #e5e7eb;
+      border-radius: 8px; padding: 11px 13px; margin-top: 10px;
+    }
+    .legend-title { font-size: 9.5px; font-weight: 800; color: #1a3a5c; letter-spacing: 0.06em; margin-bottom: 7px; }
+    .legend-items { display: flex; flex-direction: column; gap: 5px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 10.5px; color: #4b5563; }
+    svg text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .changes {
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 8px; padding: 11px 14px; margin-top: 10px;
+    }
+    .changes-title { font-size: 10px; font-weight: 800; color: #166534; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .change-item { font-size: 10.5px; color: #166534; margin-bottom: 3px; padding-left: 10px; position: relative; }
+    .change-item::before { content: "•"; position: absolute; left: 0; }
+  </style>
+</head>
+<body>
+
+<div class="badge">PROTÓTIPO — Engine com 14 arquétipos (ambiente de testes)</div>
+
+<div class="card">
+  <h2>Arquétipo MECA</h2>
+  <p class="subtitle">14 arquétipos posicionados nos eixos Capacidade × Direção e Sistema</p>
+
+  <div class="axis-top">↑ ALTA DIREÇÃO E SISTEMA</div>
+
+  <div class="graph-row">
+    <div class="axis-vert left">← BAIXA CAPACIDADE</div>
+
+    <!--
+    ══════════════════════════════════════════
+    SVG 480×480  |  1 data unit = 4.8px
+    svgX = dataX * 4.8
+    svgY = (100 − dataY) * 4.8
+    Threshold 50 → svg 240
+    Center dot = âncora conceitual de cada arquétipo
+
+    EXISTING (border sólido):
+      Acelerado MECA           data x=75..99 y=75..99  → ajustado p/ threshold ≥80
+      Protagonista Desalinhado data x=50..80 y=50..75
+      Especialista Reconhecido data x=60..90 y=62..82  → NOVO (fill entre Protagonista↔MECA)
+      Competente Desengajado   data x=58..88 y=38..56  → NOVO (cruza limite superior/inferior direito)
+      Estrategista Estagnado   data x= 2..44 y=65..99
+      Bem-Quisto Estagnado     data x= 2..38 y=55..87
+      Útil Sem Direção         data x=15..50 y=50..72
+      Potencial Represado      data x= 5..46 y=45..66  → NOVO (cruza limite sup/inf esquerdo)
+      Profissional Invisível   data x= 2..45 y= 3..44
+      Performático Exausto     data x=50..88 y=24..50
+      Executor Isolado         data x=54..99 y= 3..38
+      Esforçado Perdido        data x=38..72 y=20..50  → NOVO (cruza limite inf esq/dir)
+      Arquiteto em Construção  data x=38..72 y=70..96  → NOVO (cruza limite sup esq/dir, topo)
+      O Adormecido             data x=28..56 y=28..56  → NOVO (cruza ambos eixos, inf esq central)
+      Profissional Invisível   data x= 2..38 y= 2..38  → REVISADO (restrito ao canto inf esq extremo)
+    ══════════════════════════════════════════
+    -->
+    <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id="cp"><rect width="480" height="480"/></clipPath>
+      </defs>
+
+      <!-- Zone backgrounds -->
+      <rect x="0"   y="0"   width="240" height="240" fill="#e8ecf5"/><!-- top-left  →  Potencial Desperdiçado -->
+      <rect x="240" y="0"   width="240" height="240" fill="#e6f4ea"/><!-- top-right →  Zona de Aceleração    -->
+      <rect x="0"   y="240" width="240" height="240" fill="#fdecee"/><!-- bot-left  →  Zona de Invisibilidade -->
+      <rect x="240" y="240" width="240" height="240" fill="#fff3e0"/><!-- bot-right →  Esforço Invisível      -->
+
+      <!-- ══════════════════════════════════
+           ARCHETYPE RECTANGLES
+           Existing = stroke sólido
+           New      = stroke tracejado (stroke-dasharray)
+      ══════════════════════════════════ -->
+      <g clip-path="url(#cp)">
+
+        <!-- ── TOP-LEFT: Potencial Desperdiçado ── -->
+        <!-- Estrategista Estagnado: data x=2..44, y=65..99 -->
+        <rect x="10"  y="5"   width="201" height="163" rx="9"
+              fill="#2245a8" fill-opacity="0.15" stroke="#2245a8" stroke-width="1.8" stroke-opacity="0.65"/>
+        <!-- Bem-Quisto Estagnado: data x=2..38, y=55..87 -->
+        <rect x="10"  y="62"  width="173" height="154" rx="9"
+              fill="#4070c8" fill-opacity="0.15" stroke="#4070c8" stroke-width="1.8" stroke-opacity="0.65"/>
+        <!-- Útil Sem Direção: data x=15..50, y=50..72 -->
+        <rect x="72"  y="134" width="168" height="106" rx="9"
+              fill="#6090d8" fill-opacity="0.15" stroke="#6090d8" stroke-width="1.8" stroke-opacity="0.65"/>
+
+        <!-- ── TOP-RIGHT: Zona de Aceleração ── -->
+        <!-- Acelerado MECA (ajustado ≥80): data x=75..99, y=75..99 -->
+        <rect x="360" y="5"   width="115" height="115" rx="9"
+              fill="#1a7a45" fill-opacity="0.22" stroke="#1a7a45" stroke-width="2"   stroke-opacity="0.80"/>
+        <!-- Especialista Reconhecido (NOVO): data x=60..90, y=62..82 -->
+        <rect x="288" y="86"  width="144" height="96"  rx="9"
+              fill="#2a7060" fill-opacity="0.18" stroke="#2a7060" stroke-width="2"   stroke-opacity="0.75"
+              stroke-dasharray="7,2.5"/>
+        <!-- Protagonista Desalinhado: data x=50..80, y=50..75 -->
+        <rect x="240" y="120" width="144" height="120" rx="9"
+              fill="#3aae78" fill-opacity="0.16" stroke="#3aae78" stroke-width="1.8" stroke-opacity="0.68"/>
+
+        <!-- ── SPANNING top-right / bottom-right ── -->
+        <!-- Competente Desengajado (NOVO): data x=58..88, y=38..56 → cruza y=50 -->
+        <rect x="278" y="211" width="144" height="86"  rx="9"
+              fill="#a07020" fill-opacity="0.18" stroke="#a07020" stroke-width="2"   stroke-opacity="0.75"
+              stroke-dasharray="7,2.5"/>
+
+        <!-- ── SPANNING top-left / bottom-left ── -->
+        <!-- Potencial Represado (NOVO): data x=5..46, y=45..66 → cruza y=50 -->
+        <rect x="24"  y="163" width="197" height="101" rx="9"
+              fill="#6848b8" fill-opacity="0.16" stroke="#6848b8" stroke-width="2"   stroke-opacity="0.72"
+              stroke-dasharray="7,2.5"/>
+
+        <!-- ── BOTTOM-RIGHT: Esforço Invisível ── -->
+        <!-- Performático Exausto: data x=50..88, y=24..50 -->
+        <rect x="240" y="240" width="182" height="125" rx="9"
+              fill="#e07828" fill-opacity="0.18" stroke="#e07828" stroke-width="1.8" stroke-opacity="0.70"/>
+        <!-- Executor Isolado: data x=54..99, y=3..38 -->
+        <rect x="259" y="298" width="216" height="168" rx="9"
+              fill="#c84810" fill-opacity="0.18" stroke="#c84810" stroke-width="1.8" stroke-opacity="0.70"/>
+
+        <!-- ── SPANNING bottom-left / bottom-right ── -->
+        <!-- Esforçado Perdido (NOVO): data x=38..72, y=20..50 → cruza x=50 -->
+        <rect x="182" y="240" width="163" height="144" rx="9"
+              fill="#904060" fill-opacity="0.16" stroke="#904060" stroke-width="2"   stroke-opacity="0.72"
+              stroke-dasharray="7,2.5"/>
+
+        <!-- ── BOTTOM-LEFT: Zona de Invisibilidade ── -->
+        <!-- Profissional Invisível REVISADO: data x=2..38, y=2..38 → canto extremo inf esq -->
+        <rect x="10"  y="298" width="173" height="173" rx="9"
+              fill="#c03040" fill-opacity="0.18" stroke="#c03040" stroke-width="1.8" stroke-opacity="0.70"/>
+
+        <!-- ── SPANNING top-left / top-right (topo) ── -->
+        <!-- Arquiteto em Construção (NOVO): data x=38..72, y=70..96 → cruza X=50 no topo -->
+        <rect x="182" y="19"  width="163" height="125" rx="9"
+              fill="#7040a8" fill-opacity="0.17" stroke="#7040a8" stroke-width="2"   stroke-opacity="0.75"
+              stroke-dasharray="7,2.5"/>
+
+        <!-- ── SPANNING all four borders around center ── -->
+        <!-- O Adormecido (NOVO): data x=28..56, y=28..56 → cruza X=50 e Y=50, inf esq central -->
+        <rect x="134" y="211" width="134" height="134" rx="9"
+              fill="#5a7088" fill-opacity="0.17" stroke="#5a7088" stroke-width="2"   stroke-opacity="0.72"
+              stroke-dasharray="7,2.5"/>
+
+      </g>
+
+      <!-- Axis dividers -->
+      <line x1="240" y1="0"   x2="240" y2="480" stroke="#64748b" stroke-width="1.5"/>
+      <line x1="0"   y1="240" x2="480" y2="240" stroke="#64748b" stroke-width="1.5"/>
+
+      <!-- Zone corner labels -->
+      <text x="10"  y="477" font-size="7" font-weight="800" fill="#7a1f2b" opacity="0.55" letter-spacing="0.04em">INVISIBILIDADE</text>
+      <text x="470" y="477" font-size="7" font-weight="800" fill="#8a4b00" opacity="0.55" letter-spacing="0.04em" text-anchor="end">ESFORÇO INVISÍVEL</text>
+      <text x="10"  y="10"  font-size="7" font-weight="800" fill="#1a3a5c" opacity="0.55" letter-spacing="0.04em">POTENCIAL DESPERDIÇADO</text>
+      <text x="470" y="10"  font-size="7" font-weight="800" fill="#1e4d2b" opacity="0.55" letter-spacing="0.04em" text-anchor="end">ZONA DE ACELERAÇÃO</text>
+
+      <!-- Central transition zone -->
+      <rect x="192" y="192" width="96" height="96"
+            fill="rgba(248,250,252,0.90)" stroke="#64748b"
+            stroke-width="1.5" stroke-dasharray="4,3" rx="8"/>
+      <text x="240" y="234" text-anchor="middle" font-size="7" font-weight="800" fill="#475569" letter-spacing="0.05em">ZONA DE</text>
+      <text x="240" y="245" text-anchor="middle" font-size="7" font-weight="800" fill="#475569" letter-spacing="0.05em">TRANSIÇÃO</text>
+
+      <!-- ════════════════════════════════════════
+           ARCHETYPE LABELS (white pill + text)
+           "✦" prefix marks new archetypes
+      ════════════════════════════════════════ -->
+
+      <!-- 1. Estrategista Estagnado — upper-left of its rect -->
+      <rect x="13" y="13" width="86" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="17" y="25"  font-size="8.5" font-weight="700" fill="#2245a8">◈ Estrategista</text>
+      <text x="17" y="36"  font-size="8.5" font-weight="700" fill="#2245a8">   Estagnado</text>
+      <circle cx="111" cy="84" r="3.5" fill="#2245a8" stroke="white" stroke-width="1.5"/>
+
+      <!-- 2. Bem-Quisto Estagnado — lower-left, unique area below Estrategista -->
+      <rect x="13" y="175" width="86" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="17" y="187" font-size="8.5" font-weight="700" fill="#3a60b8">◇ Bem-Quisto</text>
+      <text x="17" y="198" font-size="8.5" font-weight="700" fill="#3a60b8">   Estagnado</text>
+      <circle cx="96" cy="139" r="3.5" fill="#4070c8" stroke="white" stroke-width="1.5"/>
+
+      <!-- 3. Útil Sem Direção — upper area -->
+      <rect x="76" y="137" width="76" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="80" y="149" font-size="8.5" font-weight="700" fill="#4a78c0">◉ Útil Sem</text>
+      <text x="80" y="160" font-size="8.5" font-weight="700" fill="#4a78c0">   Direção</text>
+      <circle cx="149" cy="187" r="3.5" fill="#5a88d0" stroke="white" stroke-width="1.5"/>
+
+      <!-- 4. Potencial Represado (NOVO) — in bottom-left portion of spanning rect -->
+      <rect x="27" y="248" width="106" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="31" y="260" font-size="8.5" font-weight="700" fill="#6848b8">✦ Potencial</text>
+      <text x="31" y="271" font-size="8.5" font-weight="700" fill="#6848b8">   Represado</text>
+      <circle cx="122" cy="214" r="3.5" fill="#6848b8" stroke="white" stroke-width="1.5"/>
+
+      <!-- 5. Acelerado MECA — upper-left of its (smaller) rect -->
+      <rect x="363" y="13" width="88" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="367" y="25" font-size="8.5" font-weight="700" fill="#1a7a45">🚀 Acelerado</text>
+      <text x="367" y="36" font-size="8.5" font-weight="700" fill="#1a7a45">   MECA ≥80</text>
+      <circle cx="418" cy="63" r="3.5" fill="#1a7a45" stroke="white" stroke-width="1.5"/>
+
+      <!-- 6. Especialista Reconhecido (NOVO) — upper-left of its rect -->
+      <rect x="291" y="93" width="116" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="295" y="105" font-size="8.5" font-weight="700" fill="#2a7060">✦ Especialista</text>
+      <text x="295" y="116" font-size="8.5" font-weight="700" fill="#2a7060">   Reconhecido</text>
+      <circle cx="360" cy="134" r="3.5" fill="#2a7060" stroke="white" stroke-width="1.5"/>
+
+      <!-- 7. Protagonista Desalinhado — left side of its rect -->
+      <rect x="243" y="183" width="110" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="247" y="195" font-size="8.5" font-weight="700" fill="#1e8050">🧭 Protagonista</text>
+      <text x="247" y="206" font-size="8.5" font-weight="700" fill="#1e8050">   Desalinhado</text>
+      <circle cx="312" cy="180" r="3.5" fill="#2a9e68" stroke="white" stroke-width="1.5"/>
+
+      <!-- 8. Competente Desengajado (NOVO) — upper-right in its spanning rect (above center line) -->
+      <rect x="330" y="213" width="118" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="334" y="225" font-size="8.5" font-weight="700" fill="#a07020">✦ Competente</text>
+      <text x="334" y="236" font-size="8.5" font-weight="700" fill="#a07020">   Desengajado</text>
+      <circle cx="350" cy="254" r="3.5" fill="#a07020" stroke="white" stroke-width="1.5"/>
+
+      <!-- 9. Performático Exausto — upper-left of its rect -->
+      <rect x="243" y="248" width="94" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="247" y="260" font-size="8.5" font-weight="700" fill="#b85c10">🔋 Performático</text>
+      <text x="247" y="271" font-size="8.5" font-weight="700" fill="#b85c10">   Exausto</text>
+      <circle cx="331" cy="302" r="3.5" fill="#d07020" stroke="white" stroke-width="1.5"/>
+
+      <!-- 10. Esforçado Perdido (NOVO) — lower-left of its rect, in bottom-left portion -->
+      <rect x="185" y="356" width="100" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="189" y="368" font-size="8.5" font-weight="700" fill="#904060">✦ Esforçado</text>
+      <text x="189" y="379" font-size="8.5" font-weight="700" fill="#904060">   Perdido</text>
+      <circle cx="263" cy="312" r="3.5" fill="#904060" stroke="white" stroke-width="1.5"/>
+
+      <!-- 11. Executor Isolado — lower-right of its rect -->
+      <rect x="338" y="428" width="82" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="342" y="440" font-size="8.5" font-weight="700" fill="#a03808">⚙ Executor</text>
+      <text x="342" y="451" font-size="8.5" font-weight="700" fill="#a03808">   Isolado</text>
+      <circle cx="367" cy="382" r="3.5" fill="#c84810" stroke="white" stroke-width="1.5"/>
+
+      <!-- 12. Profissional Invisível REVISADO — canto extremo, rect menor -->
+      <rect x="13" y="432" width="104" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="17" y="444" font-size="8.5" font-weight="700" fill="#961828">👁 Profissional</text>
+      <text x="17" y="455" font-size="8.5" font-weight="700" fill="#961828">   Invisível</text>
+      <circle cx="97" cy="384" r="3.5" fill="#b82840" stroke="white" stroke-width="1.5"/>
+
+      <!-- 13. Arquiteto em Construção (NOVO) — topo, cruza o eixo X=50 -->
+      <!-- rect svg x=182..345, y=19..144 | center (263, 81) -->
+      <rect x="185" y="24" width="106" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="189" y="36"  font-size="8.5" font-weight="700" fill="#7040a8">✦ Arquiteto em</text>
+      <text x="189" y="47"  font-size="8.5" font-weight="700" fill="#7040a8">   Construção</text>
+      <circle cx="263" cy="81" r="3.5" fill="#7040a8" stroke="white" stroke-width="1.5"/>
+
+      <!-- 14. O Adormecido (NOVO) — inf esq central, cruza X=50 e Y=50 -->
+      <!-- rect svg x=134..268, y=211..345 | center (201, 278) -->
+      <rect x="138" y="295" width="84" height="34" rx="5" fill="white" fill-opacity="0.88"/>
+      <text x="142" y="307" font-size="8.5" font-weight="700" fill="#5a7088">✦ O</text>
+      <text x="142" y="318" font-size="8.5" font-weight="700" fill="#5a7088">   Adormecido</text>
+      <circle cx="201" cy="278" r="3.5" fill="#5a7088" stroke="white" stroke-width="1.5"/>
+
+      <!-- ════════════════════════════
+           USER POSITION
+           data(62, 58) → svg(298, 202)
+           Arquétipo: Protagonista Desalinhado
+      ════════════════════════════ -->
+
+      <!-- Trajectory: user → Acelerado MECA (via Especialista Reconhecido) -->
+      <line x1="298" y1="202" x2="418" y2="63"
+            stroke="#1a7a45" stroke-width="1.4" stroke-dasharray="5,4" opacity="0.50"/>
+
+      <!-- Pulsing ring -->
+      <circle cx="298" cy="202" fill="#1a3a5c" opacity="0.28" r="9">
+        <animate attributeName="r"       values="9;22;9"   dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.35;0;0.35" dur="2s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- User dot -->
+      <circle cx="298" cy="202" r="8" fill="#1a3a5c" stroke="white" stroke-width="3"/>
+
+      <!-- "Você está aqui" callout -->
+      <rect x="308" y="184" width="86" height="18" rx="4" fill="#1a3a5c"/>
+      <text x="351" y="197" text-anchor="middle" font-size="8.5" font-weight="700" fill="white">Você está aqui</text>
+
+      <!-- Animated ring on Acelerado MECA target -->
+      <circle cx="418" cy="63" fill="none" stroke="#1a7a45" stroke-width="1.8" r="14">
+        <animate attributeName="r"       values="12;20;12" dur="2.4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.75;0.2;0.75" dur="2.4s" repeatCount="indefinite"/>
+      </circle>
+
+    </svg>
+
+    <div class="axis-vert">ALTA CAPACIDADE →</div>
+  </div>
+
+  <div class="axis-bottom">↓ BAIXA DIREÇÃO E SISTEMA</div>
+
+  <div class="scores">
+    <div class="score-item">
+      <div class="sl">Capacidade (A)</div>
+      <div class="sv">62<span class="su">/100</span></div>
+    </div>
+    <div class="score-item">
+      <div class="sl">Direção e Sistema (C+E)</div>
+      <div class="sv">58<span class="su">/100</span></div>
+    </div>
+    <div class="score-item">
+      <div class="sl">Arquétipo</div>
+      <div class="arch-name">🧭 Protagonista<br>Desalinhado</div>
+    </div>
+  </div>
+
+  <!-- Mudanças da engine -->
+  <div class="changes">
+    <div class="changes-title">MUDANÇAS NESTE PROTÓTIPO</div>
+    <div class="change-item"><strong>Acelerado MECA</strong> — threshold ajustado: todos pilares ≥ 80 (era ≥ 70). Área menor no canto superior direito.</div>
+    <div class="change-item"><strong>✦ Especialista Reconhecido</strong> — preenche gap entre Protagonista Desalinhado e Acelerado MECA. A ≥ 70, (C+E)/2 ≥ 65, algum pilar ainda &lt; 80.</div>
+    <div class="change-item"><strong>✦ Competente Desengajado</strong> — intersecção superior/inferior direito (cruza linha Y=50). A ≥ 65, C ≥ 55, E &lt; 50.</div>
+    <div class="change-item"><strong>✦ Potencial Represado</strong> — esquerdo inferior tendendo ao superior (cruza linha Y=50). C ≥ 50, E ≥ 50, A &lt; 50, M &lt; 50.</div>
+    <div class="change-item"><strong>✦ Esforçado Perdido</strong> — inferior esquerdo tendendo ao direito (cruza linha X=50). A ≥ 50, M ≥ 50, C &lt; 50, E &lt; 50.</div>
+    <div class="change-item"><strong>✦ Arquiteto em Construção</strong> — cruza o eixo X=50 no topo, preenchendo gap entre Estrategista Estagnado e Acelerado MECA. (C+E)/2 ≥ 70, A entre 45–70.</div>
+    <div class="change-item"><strong>✦ O Adormecido</strong> — faixa central do quadrante inferior esquerdo, cruza ambos os eixos, cobre transição entre Profissional Invisível e Zona de Transição. A entre 30–55, (C+E)/2 entre 30–55.</div>
+    <div class="change-item"><strong>Profissional Invisível REVISADO</strong> — restrito ao canto inferior esquerdo extremo. A &lt; 40, (C+E)/2 &lt; 40, nenhum pilar acima de 35.</div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-title">LEGENDA</div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <svg width="20" height="13" style="flex-shrink:0">
+          <rect x="1" y="1" width="18" height="11" rx="2.5"
+                fill="#2245a8" fill-opacity="0.15" stroke="#2245a8" stroke-width="1.6" stroke-opacity="0.65"/>
+        </svg>
+        Borda sólida = arquétipo existente
+      </div>
+      <div class="legend-item">
+        <svg width="20" height="13" style="flex-shrink:0">
+          <rect x="1" y="1" width="18" height="11" rx="2.5"
+                fill="#6848b8" fill-opacity="0.15" stroke="#6848b8" stroke-width="1.8" stroke-opacity="0.72"
+                stroke-dasharray="5,2"/>
+        </svg>
+        Borda tracejada ✦ = arquétipo novo
+      </div>
+      <div class="legend-item">
+        <svg width="20" height="13" style="flex-shrink:0">
+          <rect x="1" y="1" width="18" height="11" rx="2.5"
+                fill="#6848b8" fill-opacity="0.15" stroke="#6848b8" stroke-width="1.8" stroke-opacity="0.72"
+                stroke-dasharray="5,2"/>
+          <line x1="1" y1="6.5" x2="19" y2="6.5" stroke="#64748b" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.4"/>
+        </svg>
+        Retângulo cruzando eixo = arquétipo que transcende um quadrante
+      </div>
+      <div class="legend-item">
+        <svg width="10" height="10" style="flex-shrink:0">
+          <circle cx="5" cy="5" r="3.5" fill="#1a3a5c" stroke="white" stroke-width="1.5"/>
+        </svg>
+        Ponto menor = centro-âncora (posição-referência) do arquétipo
+      </div>
+      <div class="legend-item">
+        <svg width="22" height="8" style="flex-shrink:0">
+          <line x1="0" y1="4" x2="22" y2="4" stroke="#1a7a45" stroke-width="1.4" stroke-dasharray="5,4" opacity="0.7"/>
+        </svg>
+        Linha tracejada = trajetória até o arquétipo-alvo
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -21,7 +21,7 @@ export function ArquetiposSection() {
   return (
     <section
       className="ds-card h-full p-6 sm:p-7 lg:p-9"
-      aria-label="Os 8 arquétipos MECA"
+      aria-label="Os 14 arquétipos MECA"
     >
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-7 xl:grid-cols-4 xl:gap-6">
         {ARCHETYPE_PAGE_ORDER.map((key) => (

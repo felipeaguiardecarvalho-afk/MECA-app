@@ -388,7 +388,7 @@ function buildHtml(params: {
   const userNameSafe = userName ? sanitizePdfText(userName) : "";
 
   const archetype = getArchetype(scores);
-  const plan = getActionPlan(scores, answers);
+  const plan = getActionPlan(scores, answers, { isFallback: archetype.isFallback });
   const ranking = getPillarRanking(scores);
 
   // Weakest = lowest, strongest = highest (ranking is ascending)
@@ -461,7 +461,17 @@ function buildHtml(params: {
     .join("\n");
 
   // -------- Hero section --------------------------------------------------
-  const heroImpactPhrase = archetypeMechanics;
+  // Em fallback, suavizamos a linguagem do hero: o arquétipo deixa de ser
+  // "seu" e passa a ser "mais próximo", com badge explícito de transição.
+  const heroEyebrow = archetype.isFallback
+    ? "Perfil mais próximo · em transição"
+    : "Seu arquétipo";
+  const heroImpactPhrase = archetype.isFallback
+    ? `Seu perfil atual se aproxima de ${archetypeName}, mas está em transição entre arquétipos. ${archetypeMechanics}`
+    : archetypeMechanics;
+  const fallbackBadgeHtml = archetype.isFallback
+    ? `<div class="hero-fallback-badge">⚠ Perfil em transição — classificação não-definitiva</div>`
+    : "";
 
   const quadrantGraph = buildQuadrantGraph(archetype);
   const executiveSummary = buildExecutiveSummary(
@@ -782,6 +792,18 @@ function buildHtml(params: {
   }
 
   .hero-eyebrow { color: #4a90d9; letter-spacing: 0.28em; font-weight: 700; font-size: 10px; text-transform: uppercase; }
+  .hero-fallback-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #d8b4fe;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
   .hero-zone {
     display: inline-block;
     margin-top: 10px;
@@ -1844,12 +1866,13 @@ function buildHtml(params: {
   </div>
 
   <div class="hero-intro">
-    <div class="hero-eyebrow">Seu arquétipo</div>
+    <div class="hero-eyebrow">${heroEyebrow}</div>
     <div class="hero-zone">${archetypeZone}</div>
     <h1 class="hero-title">
       <span class="hero-title-icon">${sanitizePdfText(archetype.icon)}</span>
       <span>${archetypeName}</span>
     </h1>
+    ${fallbackBadgeHtml}
     <p class="hero-impact">${sanitizePdfText(heroImpactPhrase)}</p>
   </div>
 

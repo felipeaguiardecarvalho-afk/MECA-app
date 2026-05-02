@@ -168,16 +168,28 @@ export type ActionPlanResult = {
   actionTheoryIds: number[];
   /** Valores por pilar (para transparência na UI). */
   scores: FourPillarScores;
+  /**
+   * `true` quando o arquétipo veio do fallback (nenhuma regra disparou).
+   * Indica que o tom do plano deve ser exploratório/estabilização, não
+   * baseado em arquétipo definitivo.
+   */
+  isFallback: boolean;
 };
 
 /**
  * Plano de ação derivado do gargalo: menor entre mentalidade, engajamento, cultura e performance.
  * Conteúdo específico por pilar — não é genérico entre pilares.
+ *
+ * Quando `isFallback=true`, o título/descrição passam a tom de estabilização
+ * (não há arquétipo definitivo a "atacar"). As ações por pilar e teorias
+ * permanecem inalteradas — o gargalo continua sendo o mesmo.
  */
 export function getActionPlan(
   scores: MECAScores,
   answers?: Record<string, number> | null,
+  options?: { isFallback?: boolean },
 ): ActionPlanResult {
+  const isFallback = options?.isFallback === true;
   const four = mecaScoresToFourPillar(scores);
   const { key, value } = getBottleneckPillar(four);
   const template = PLANS[key];
@@ -270,16 +282,27 @@ export function getActionPlan(
 
   const actions = actionItems.map((item) => item.dashboardText);
 
+  // Em fallback, a engine não classificou um arquétipo definitivo. O plano
+  // pivota para tom de estabilização: foco no pilar mais fraco para sair da
+  // zona de transição, sem prometer um perfil específico.
+  const title = isFallback
+    ? `Estabilizar perfil em transição · foco em ${PILLAR_LABEL[key]}`
+    : template.title;
+  const description = isFallback
+    ? `Você está em zona de transição entre arquétipos. As próximas semanas devem se concentrar em fortalecer ${PILLAR_LABEL[key]} (menor pilar) para que seu perfil estabilize numa classificação definitiva. ${template.description}`
+    : template.description;
+
   return {
     pillar: PILLAR_LABEL[key],
     pillarKey: key,
     secondaryPillarKey: secondaryKey,
     lowestScore: value,
-    title: template.title,
-    description: template.description,
+    title,
+    description,
     actionItems,
     actions,
     actionTheoryIds,
     scores: { ...four },
+    isFallback,
   };
 }

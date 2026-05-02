@@ -500,8 +500,14 @@ export const MECADashboard: React.FC = () => {
               style={{ background: archetype.bgColor }}
             >
               <span className="text-xs font-bold text-[#1a3a5c] sm:text-sm">
+                {archetype.isFallback ? "Mais próximo: " : ""}
                 {archetype.icon} {archetype.name}
                 <span className="ml-2 opacity-70">· {archetype.zoneLabel}</span>
+                {archetype.isFallback ? (
+                  <span className="ml-2 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-800">
+                    Perfil em transição
+                  </span>
+                ) : null}
               </span>
             </div>
           )}

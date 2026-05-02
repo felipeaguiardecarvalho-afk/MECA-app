@@ -210,7 +210,13 @@ export const ComparisonView: React.FC<Props> = ({ older, newer }) => {
                     color: "#1a3a5c",
                   }}
                 >
+                  {archetypeOlder.isFallback ? "≈ " : ""}
                   {archetypeOlder.name}
+                  {archetypeOlder.isFallback ? (
+                    <span style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#7a4ca0", marginTop: 2 }}>
+                      Perfil em transição
+                    </span>
+                  ) : null}
                 </p>
               </div>
             </div>
@@ -313,7 +319,13 @@ export const ComparisonView: React.FC<Props> = ({ older, newer }) => {
                     color: "#1a3a5c",
                   }}
                 >
+                  {archetypeNewer.isFallback ? "≈ " : ""}
                   {archetypeNewer.name}
+                  {archetypeNewer.isFallback ? (
+                    <span style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#7a4ca0", marginTop: 2 }}>
+                      Perfil em transição
+                    </span>
+                  ) : null}
                 </p>
               </div>
             </div>

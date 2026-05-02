@@ -2,13 +2,19 @@
 
 import {
   BatteryLow,
+  BookOpen,
   Cog,
   EyeOff,
+  Flame,
   HelpingHand,
+  Layers,
+  MoonStar,
   Rocket,
   Telescope,
   TrendingUp,
   Users,
+  Wrench,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import type { ArchetypeKey } from "@/lib/archetypes";
@@ -22,6 +28,12 @@ const ICON_MAP: Record<ArchetypeKey, LucideIcon> = {
   acelerado_meca: TrendingUp,
   profissional_invisivel: EyeOff,
   util_sem_direcao: HelpingHand,
+  especialista_reconhecido: BookOpen,
+  competente_desengajado: Layers,
+  potencial_represado: Zap,
+  esforcado_perdido: Flame,
+  arquiteto_em_construcao: Wrench,
+  adormecido: MoonStar,
 };
 
 type Props = {

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FAQSection } from "@/components/blog/FAQSection";
+import { BlogFAQAccordion } from "@/components/blog/BlogFAQAccordion";
+import { getBlogFaq } from "@/lib/blog-faq";
 import { formatBlogDate, getAllBlogPosts, getBlogPost } from "@/lib/blog";
+import { getSiteOrigin } from "@/lib/env";
 
 type BlogArticlePageProps = {
   params: Promise<{
@@ -56,6 +58,25 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
 
   if (!post) notFound();
 
+  const faq = getBlogFaq(post.slug);
+  const origin = getSiteOrigin();
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    author: {
+      "@type": "Person",
+      name: post.author,
+    },
+    url: `${origin}/blog/${post.slug}`,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${origin}/blog/${post.slug}`,
+    },
+  };
+
   return (
     <article className="w-full min-w-0 bg-gradient-to-b from-transparent via-white/50 to-indigo-50/20 py-4 sm:py-5 lg:py-7">
       <div className="container-meca pb-10 pt-3 sm:pb-12 sm:pt-4">
@@ -100,7 +121,20 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
             dangerouslySetInnerHTML={{ __html: post.html }}
           />
 
-          {post.slug === "o-que-e-o-metodo-meca" ? <FAQSection /> : null}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(articleJsonLd),
+            }}
+          />
+
+          {faq ? (
+            <BlogFAQAccordion
+              items={faq.items}
+              intro={faq.intro}
+              sectionTitle={faq.sectionTitle}
+            />
+          ) : null}
         </div>
       </div>
     </article>

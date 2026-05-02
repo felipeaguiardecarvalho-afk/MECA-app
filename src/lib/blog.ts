@@ -179,6 +179,15 @@ export function renderMarkdownToHtml(markdown: string): string {
       continue;
     }
 
+    if (line === "---") {
+      flushParagraph();
+      flushList();
+      html.push(
+        '<hr class="my-10 border-0 border-t border-slate-200" />',
+      );
+      continue;
+    }
+
     const heading = line.match(/^(#{2,3})\s+(.+)$/);
     if (heading) {
       flushParagraph();

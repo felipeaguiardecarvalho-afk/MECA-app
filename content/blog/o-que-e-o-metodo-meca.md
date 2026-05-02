@@ -62,4 +62,4 @@ Porque, antes de mudar sua forma de agir, é preciso entender como seu comportam
 
 Antes de ajustar sua estratégia, vale entender onde, dentro desse sistema, está o desalinhamento.
 
-Faça o diagnóstico MECA e identifique quais fatores estão limitando seu crescimento profissional.
+[Faça o diagnóstico MECA](/diagnostico) e identifique quais fatores estão limitando seu crescimento profissional.

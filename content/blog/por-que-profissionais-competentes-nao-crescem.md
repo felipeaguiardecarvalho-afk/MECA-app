@@ -74,4 +74,4 @@ O primeiro passo não é agir mais.
 
 Antes de mudar sua estratégia, vale entender o que, hoje, está limitando seu crescimento.
 
-👉 [Faça o diagnóstico MECA](/diagnostico) e identifique quais fatores estão travando sua evolução profissional.
+[Faça o diagnóstico MECA](/diagnostico) e identifique quais fatores estão travando sua evolução profissional.

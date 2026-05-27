@@ -4,7 +4,7 @@ import { logAdminAction } from "@/lib/admin-audit-log";
 import { logger } from "@/lib/logger";
 import { getPillarRanking } from "@/lib/meca-interpretation";
 import type { PillarInterpretation } from "@/lib/meca-interpretation";
-import { getLowestTheories } from "@/lib/meca-theories";
+import { getTheoriesSortedByScore } from "@/lib/meca-theories";
 import type { ScoredTheory } from "@/lib/meca-theories";
 import {
   sanitizePdfHtmlDocument,
@@ -96,13 +96,12 @@ function buildTheorySections(theories: ScoredTheory[]): string {
           ? `
       <div class="theories-opener">
         <div class="eyebrow">Fundamentos aplicados ao seu caso</div>
-        <h2 class="section-title">Teorias que mais impactam a sua trajetória hoje</h2>
+        <h2 class="section-title">Fundamentos MECA aplicados ao seu perfil</h2>
         <p class="theories-intro">
-          As teorias abaixo foram selecionadas automaticamente com base nas suas menores
-          pontuações individuais. Cada uma representa um padrão de comportamento que,
-          quando desenvolvido, gera impacto direto na sua performance e trajetória
-          profissional. O diagnóstico, a fundamentação e o plano de ação foram
-          personalizados com base nas suas respostas.
+          As ${theories.length} teorias do método MECA aparecem abaixo em ordem crescente
+          de pontuação (da menor para a maior), com base nas suas respostas individuais.
+          Cada uma representa um padrão de comportamento que, quando desenvolvido, gera
+          impacto direto na sua performance e trajetória profissional.
         </p>
       </div>`
           : "";
@@ -445,10 +444,8 @@ function buildHtml(params: {
     .map(
       (item, i) => `
       <li class="action-step">
-        <div class="action-step-check"></div>
         <span class="action-step-num">${i + 1}</span>
         <div class="action-step-body">
-          <span class="action-step-meta">Passo ${i + 1}</span>
           <div class="action-step-text">${sanitizePdfText(item.pdfActionText)}</div>
           ${
             item.foundationText
@@ -1626,6 +1623,83 @@ function buildHtml(params: {
     color: #ffffff;
   }
 
+  /* Action plan page — fit opener + 4 steps on one A4 sheet */
+  .page-action-plan {
+    padding: 8mm 16mm 14mm;
+  }
+  .page-action-plan .page-head-compact {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+  .page-action-plan .section-title-compact {
+    font-size: 19px;
+    margin-top: 4px;
+  }
+  .page-action-plan .section-kicker-compact {
+    font-size: 11px;
+    line-height: 1.42;
+    margin-top: 4px;
+    max-width: none;
+  }
+  .page-action-plan .action-hero {
+    margin-top: 10px;
+    padding: 14px 16px 16px;
+    border-radius: 14px;
+  }
+  .page-action-plan .action-hero-opener,
+  .page-action-plan .action-list {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .page-action-plan .action-step {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+  .page-action-plan .action-hero-pillar { margin-top: 8px; }
+  .page-action-plan .action-hero-title {
+    font-size: 21px;
+    margin-top: 4px;
+    line-height: 1.15;
+  }
+  .page-action-plan .action-hero-desc {
+    font-size: 11.5px;
+    line-height: 1.45;
+    margin-top: 6px;
+  }
+  .page-action-plan .action-hero-divider {
+    margin: 8px 0 6px;
+  }
+  .page-action-plan .action-list-label {
+    margin-bottom: 6px;
+    letter-spacing: 0.2em;
+  }
+  .page-action-plan .action-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .page-action-plan .action-step {
+    gap: 8px;
+    padding: 8px 9px;
+    border-radius: 10px;
+    align-items: flex-start;
+  }
+  .page-action-plan .action-step-num {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    margin-top: 0;
+  }
+  .page-action-plan .action-step-text {
+    font-size: 10.5px;
+    line-height: 1.42;
+  }
+  .page-action-plan .action-step-foundation {
+    margin-top: 4px;
+    font-size: 9.5px;
+    line-height: 1.38;
+  }
+
   /* ================================================================== */
   /*                      6 · THEORIES (APPENDIX)                       */
   /* ================================================================== */
@@ -1959,17 +2033,16 @@ function buildHtml(params: {
 <!-- ================================================================== -->
 <!-- PAGE 6 · ACTION PLAN (PILLAR-BASED)                                 -->
 <!-- ================================================================== -->
-<section class="page">
-  <div class="page-head">
+<section class="page page-action-plan">
+  <div class="page-head page-head-compact">
     <span class="page-head-brand">ME<span>CA</span> · Relatório</span>
     <span>Plano de ação</span>
   </div>
 
   <div class="eyebrow">Próximos passos prioritários</div>
-  <h2 class="section-title">O que fazer a seguir</h2>
-  <p class="section-kicker">
-    Plano específico construído a partir do seu pilar de maior alavancagem.
-    Ações sequenciais e acionáveis.
+  <h2 class="section-title section-title-compact">O que fazer a seguir</h2>
+  <p class="section-kicker section-kicker-compact">
+    Plano do seu pilar de maior alavancagem — execute os passos na ordem.
   </p>
 
   <div class="action-hero">
@@ -2192,11 +2265,7 @@ export async function GET(request: NextRequest) {
   };
 
   const answers: Record<string, number> = row.answers ?? {};
-  const weakestPillar = getActionPlan(scores, answers).pillarKey;
-  const theories = getLowestTheories(answers, 5, {
-    weakestPillar,
-    minFromWeakestPillar: 3,
-  });
+  const theories = getTheoriesSortedByScore(answers);
 
   const generatedAt = `${new Date().toLocaleDateString("pt-BR", {
     day: "2-digit",

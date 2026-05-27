@@ -428,11 +428,7 @@ export function getLowestTheories(
   count = 4,
   options: LowestTheoryOptions = {},
 ): ScoredTheory[] {
-  const scored: ScoredTheory[] = MECA_THEORIES.map((t) => ({
-    ...t,
-    score: computeTheoryScore(t.questionIds, answers),
-  }));
-  scored.sort((a, b) => a.score - b.score || a.id - b.id);
+  const scored = scoreAndSortTheories(answers);
 
   const { weakestPillar, minFromWeakestPillar = 0 } = options;
   if (!weakestPillar || minFromWeakestPillar <= 0) {
@@ -446,6 +442,22 @@ export function getLowestTheories(
   const remaining = scored.filter((t) => !selectedIds.has(t.id));
 
   return [...guaranteed, ...remaining].slice(0, count);
+}
+
+/** Todas as teorias MECA, da menor para a maior pontuação (desempate por id). */
+export function getTheoriesSortedByScore(
+  answers: Record<string, number>,
+): ScoredTheory[] {
+  return scoreAndSortTheories(answers);
+}
+
+function scoreAndSortTheories(answers: Record<string, number>): ScoredTheory[] {
+  const scored: ScoredTheory[] = MECA_THEORIES.map((t) => ({
+    ...t,
+    score: computeTheoryScore(t.questionIds, answers),
+  }));
+  scored.sort((a, b) => a.score - b.score || a.id - b.id);
+  return scored;
 }
 
 // ─── Legacy exports used by MECAPillarsSection / TheoryCard / TheoryModal ────

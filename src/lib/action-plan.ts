@@ -262,7 +262,7 @@ export function getActionPlan(
           : entry.theory.name;
         const dashboardText =
           `${action1} Para embasamento, estude em Fundamentos: ${entry.theory.name}.`.trim();
-        const pdfActionText = [action1, action2].filter(Boolean).join(" ");
+        const pdfActionText = action1;
 
         return {
           dashboardText,
